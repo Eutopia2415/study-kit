@@ -1,0 +1,6 @@
+# Written by study-kit's setup.sh, and rewritten every time setup runs.
+# Lets the tutor reach Study Hall on this Mac (http://127.0.0.1:4417) and write your files in {{STUDY}}.
+# Codex reads it once you trust this folder.
+[sandbox_workspace_write]
+network_access = true
+writable_roots = ["{{STUDY}}"]

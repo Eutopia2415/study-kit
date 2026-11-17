@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Study Plan</title>
+<style>
+  :root {
+    --bg: #161618;
+    --card: #000;
+    --line: rgba(255, 255, 255, .1);
+    --field: #232326;
+    --seg: #2c2c2e;
+    --seg-on: #48484a;
+    --track: #2c2c2e;
+    --text: #fff;
+    --text-2: #a1a1a6;
+    --text-3: #6e6e73;
+    --mint: #8fe3a9;
+    --green: #34c759;
+    --yellow: #ffd60a;
+    --red: #ff453a;
+    --blue: #0a84ff;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 14px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 28px 16px 60px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+  .src { color: var(--text-3); font-size: 12.5px; }
+  .src b { color: var(--text-2); font-weight: 500; }
+
+  nav { display: flex; gap: 2px; background: var(--seg); border-radius: 10px; padding: 3px; margin: 18px 0 20px; overflow-x: auto; }
+  nav button { flex: 1; border: 0; background: none; color: var(--text-2); font: inherit; padding: 7px 10px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+  nav button[aria-pressed="true"] { background: var(--seg-on); color: var(--text); font-weight: 600; }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 16px 18px; margin-bottom: 14px; }
+  h2 { font-size: 15px; font-weight: 700; margin: 0 0 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  h2 span { font-weight: 400; font-size: 12.5px; color: var(--text-2); }
+  .hint { color: var(--text-3); font-size: 12.5px; margin: 10px 0 0; }
+
+  .row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); }
+  .row:first-of-type { border-top: 0; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .grow { flex: 1; min-width: 0; }
+  .muted { color: var(--text-2); }
+  .small { font-size: 12.5px; }
+  .ell { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tag { font-size: 11px; color: var(--text-2); background: var(--seg); border-radius: 6px; padding: 1px 6px; white-space: nowrap; }
+  .tag.red { color: var(--red); background: rgba(255, 69, 58, .14); }
+  ul.b { margin: 4px 0 0; padding-left: 18px; color: var(--text-2); font-size: 13px; }
+
+  input, select { background: var(--field); border: 1px solid transparent; color: var(--text); font: inherit; border-radius: 8px; padding: 6px 8px; min-width: 0; color-scheme: dark; }
+  input[type=color] { width: 34px; height: 28px; padding: 2px; border-radius: 7px; }
+  input[type=time] { width: 96px; }
+  input[type=number] { width: 56px; text-align: center; }
+  input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--blue); }
+  .btn { border: 0; border-radius: 8px; padding: 7px 12px; font: inherit; font-weight: 600; background: var(--seg); color: var(--text); cursor: pointer; white-space: nowrap; }
+  .btn.p { background: var(--blue); }
+  .btn.link { background: none; color: var(--blue); padding: 7px 4px; }
+  .btn.danger { background: none; color: var(--red); padding: 7px 4px; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .x { border: 0; background: none; color: var(--text-3); font-size: 17px; cursor: pointer; padding: 0 4px; line-height: 1; }
+  .x:hover { color: var(--red); }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--line); background: none; color: var(--text-2); font: inherit; border-radius: 999px; padding: 4px 11px; cursor: pointer; }
+  .chip[aria-pressed="true"] { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .seg { display: inline-flex; background: var(--seg); border-radius: 8px; padding: 2px; gap: 2px; }
+  .seg button { border: 0; background: none; color: var(--text-2); font: inherit; font-size: 13px; padding: 4px 10px; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+  .seg button[aria-pressed="true"] { background: var(--seg-on); color: var(--text); font-weight: 600; }
+  .add { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .add input.grow { flex: 1 1 160px; }
+  .bar { height: 5px; background: var(--track); border-radius: 999px; overflow: hidden; width: 54px; flex: none; }
+  .bar i { display: block; height: 100%; background: var(--mint); }
+  .tl { display: grid; grid-template-columns: 84px 1fr; gap: 6px 12px; }
+  .tl .t { color: var(--text-2); font-size: 12.5px; padding-top: 2px; }
+  .done { text-decoration: line-through; color: var(--text-3); }
+  .group { font-size: 11.5px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; margin: 14px 0 2px; }
+  .group:first-child { margin-top: 0; }
+
+  /* week calendar */
+  .cal { padding: 12px 0 0; overflow: hidden; }
+  .calbar { display: flex; align-items: center; gap: 8px; padding: 0 14px 10px; flex-wrap: wrap; }
+  .calbar b { font-size: 16px; margin-left: 4px; }
+  .calbar .nav { border: 0; background: none; color: var(--text); font-size: 20px; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; }
+  .calbar .nav:hover { background: var(--seg); }
+  .rot { display: flex; align-items: center; gap: 8px; padding: 0 14px 10px; flex-wrap: wrap; }
+  .calscroll { overflow: auto; max-height: 620px; }
+  .calscroll .dh, .calscroll .corner { position: sticky; top: 0; z-index: 3; background: var(--card); height: 66px; }
+  .calscroll .adcell, .calscroll .gut.top { position: sticky; top: 66px; z-index: 3; background: var(--card); }
+  .col { cursor: cell; }
+  .col .ghost { position: absolute; left: 2px; right: 4px; border-radius: 6px; border: 1px dashed var(--blue); color: var(--blue);
+                font-size: 11.5px; padding: 3px 6px; pointer-events: none; display: none; }
+  .col:hover .ghost { display: block; }
+  .grid { display: grid; grid-template-columns: 52px repeat(7, minmax(84px, 1fr)); min-width: 640px; }
+  .corner, .gut { border-right: 1px solid var(--line); }
+  .dh { text-align: center; padding: 4px 0 6px; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .dh:hover { background: rgba(255,255,255,.04); }
+  .dh span { display: block; font-size: 11px; color: var(--text-2); letter-spacing: .04em; }
+  .dh em { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; font-style: normal; font-size: 19px; margin-top: 2px; }
+  .dh small { display: block; font-size: 10.5px; color: var(--text-3); min-height: 14px; }
+  .dh small b { color: var(--yellow); font-weight: 600; }
+  .dh.today span { color: var(--blue); }
+  .dh.today em { background: var(--blue); color: #fff; }
+  .dh.off em, .dh.off span { color: var(--text-3); }
+  .dh.today.off em { color: #fff; }
+  .dh.sel { background: rgba(10, 132, 255, .16); }
+  .adcell { border-left: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 3px; min-height: 26px; display: grid; gap: 2px; align-content: start; }
+  .ad { font-size: 11px; border-radius: 4px; padding: 2px 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ad.test { background: var(--red); color: #fff; font-weight: 600; }
+  .ad.hw { border: 1px solid; color: var(--text-2); }
+  .gut div { position: relative; }
+  .gut span { position: absolute; top: -7px; right: 6px; font-size: 10.5px; color: var(--text-3); }
+  .gut div:first-child span { display: none; }
+  .col { position: relative; border-left: 1px solid var(--line); }
+  .col.off { background: repeating-linear-gradient(135deg, transparent 0 6px, rgba(255,255,255,.025) 6px 12px); }
+  .col.sel { background-color: rgba(10, 132, 255, .06); }
+  .col .hr { border-top: 1px solid var(--line); }
+  .col.past .ev { opacity: .45; }
+  .ev { position: absolute; left: 2px; right: 4px; cursor: pointer; border-radius: 6px; padding: 3px 6px; font-size: 11.5px; line-height: 1.25; overflow: hidden; }
+  .ev.tpl { background: none; border: 1px dashed var(--seg-on); color: var(--text-2); }
+  .ev b { display: block; font-weight: 600; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ev span { display: block; opacity: .85; }
+  .ev i { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-style: normal; opacity: .85; margin-top: 2px; }
+  .now { position: absolute; left: -1px; right: 0; height: 2px; background: var(--red); z-index: 2; }
+  .now::before { content: ''; position: absolute; left: -5px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--red); }
+
+  /* one day's blocks */
+  .blk { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid var(--line); flex-wrap: wrap; }
+  .blk:first-of-type { border-top: 0; }
+  .blk .n { width: 62px; color: var(--text-2); font-size: 12.5px; }
+  .blk select { width: 190px; }
+  .copy { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+
+  /* subjects */
+  .sub { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); cursor: pointer; }
+  .sub:first-of-type { border-top: 0; }
+  .sub .chev { color: var(--text-3); transition: transform .2s; }
+  .sub[aria-expanded="true"] .chev { transform: rotate(90deg); }
+  .detail { display: grid; grid-template-columns: 130px 1fr; gap: 10px 14px; align-items: center; padding: 6px 0 16px 19px; }
+  .detail > label { color: var(--text-2); font-size: 13px; }
+  .detail .line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+  .detail select { flex: 1 1 200px; max-width: 340px; }
+
+  /* Inside the Study HUD app (?app=1): a Mac settings window. Sidebar on the left, content on the right. */
+  html.app, html.app body { height: 100%; }
+  body.app .wrap { max-width: none; height: 100%; padding: 0; display: grid; grid-template-columns: 200px 1fr; grid-template-rows: auto 1fr; }
+  body.app header { grid-column: 1; grid-row: 1; padding: 14px 16px 8px; display: block; background: #1c1c1e; border-right: 1px solid var(--line); }
+  body.app h1 { font-size: 20px; }
+  body.app .src { display: block; margin-top: 4px; font-size: 11.5px; }
+  body.app nav { grid-column: 1; grid-row: 2; margin: 0; padding: 6px 10px; border-radius: 0; background: #1c1c1e; border-right: 1px solid var(--line);
+                 flex-direction: column; justify-content: flex-start; gap: 2px; overflow: visible; }
+  body.app nav button { flex: none; text-align: left; padding: 7px 10px; display: flex; align-items: center; gap: 9px; font-size: 13.5px; color: var(--text); }
+  body.app nav button::before { content: attr(data-icon); width: 18px; text-align: center; color: var(--blue); font-size: 14px; }
+  body.app nav button[aria-pressed="true"] { background: var(--blue); }
+  body.app nav button[aria-pressed="true"]::before { color: #fff; }
+  body.app main { grid-column: 2; grid-row: 1 / 3; overflow-y: auto; padding: 22px 28px 40px; }
+  body.app main > * { max-width: 900px; }
+  @media (max-width: 700px) { body.app .wrap { grid-template-columns: 160px 1fr; } .detail { grid-template-columns: 1fr; } }
+  #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); opacity: 0; background: #2c2c2e; border-radius: 10px;
+           padding: 9px 16px; font-size: 13px; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 5; }
+  #toast.on { opacity: 1; transform: translateX(-50%); }
+  #toast.err { background: #3a1513; color: #ffb4ad; }
+  @media (max-width: 560px) { .tl { grid-template-columns: 1fr; } input[type=time] { width: 84px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1>Study Plan</h1><span class="src" id="src"></span></header>
+  <nav id="tabs" aria-label="Sections">
+    <button data-tab="hud">HUD</button><button data-tab="today">Today</button><button data-tab="schedule">Schedule</button>
+    <button data-tab="subjects">Subjects</button><button data-tab="todo">To-do</button><button data-tab="accounts">Accounts</button>
+  </nav>
+  <main id="view"></main>
+</div>
+<div id="toast" role="status"></div>
+<script src="plan.js"></script>
+<script>
+// Inside the app window the page becomes a sidebar layout.
+if (new URLSearchParams(location.search).has('app')) {
+  document.documentElement.classList.add('app'); document.body.classList.add('app');
+  const ICON = { today: '◷', schedule: '▦', subjects: '◉', todo: '✓', hud: '◫', accounts: '⇅' };
+  document.querySelectorAll('#tabs button').forEach(b => b.dataset.icon = ICON[b.dataset.tab] || '•');
+}
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const ORDER = [1, 2, 3, 4, 5, 6, 0];
+const short = { weekday: 'short', month: 'short', day: 'numeric' };
+const OLD_TABS = { overview: 'today', tests: 'todo', homework: 'todo', powerschool: 'accounts', sync: 'accounts' };
+const storedTab = () => { try { return localStorage.getItem('sp.tab'); } catch { return null; } };
+let tab = new URLSearchParams(location.search).get('tab') || storedTab() || 'today';
+tab = OLD_TABS[tab] || tab;
+const bridge = window.webkit?.messageHandlers?.app;   // only inside the Study HUD app
+
+function toast(msg, err) {
+  const t = $('toast'); t.textContent = msg; t.className = 'on' + (err ? ' err' : '');
+  clearTimeout(t._h); t._h = setTimeout(() => t.className = err ? 'err' : '', 2400);
+}
+async function save(url, body, msg) {
+  try { S = await api(url, body); toast(msg || 'Saved'); render(); return true; }
+  catch (e) { toast(e.message, true); return false; }
+}
+const subjOptions = sel => S.subjects.map(s => `<option value="${s.id}"${s.id === sel ? ' selected' : ''}>${esc(s.short)}</option>`).join('');
+const hm = m => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+const doneThisWeek = sid => S.log.filter(r => r.subject === sid && isBlock(r) && r.date >= weekStart(S.today)).length;
+
+/* ---------- Today: tonight and what's due ---------- */
+function today() {
+  const ev = P.evenings.find(e => e.day === S.today), next = P.evenings.find(e => e.day > S.today);
+  const block = (slot, x) => {
+    if (!x) return '';
+    const items = x.sweep ? x.sweep.map(w => `${w.s.short}: ${w.gap.title}`) : x.logged ? [x.logged.what] : (x.work || []).map(t => taskTitle(t));
+    return `<div class="t">${clock(slot.start)}–${clock(slot.end)}</div>
+      <div><div style="display:flex;align-items:center;gap:8px"><span class="dot" style="background:${slotColor(x)}"></span><b>${esc(slotName(x))}</b>
+        ${x.test ? '<span class="tag red">test prep</span>' : ''}${x.logged ? '<span class="tag">done</span>' : ''}</div>
+        <ul class="b">${items.slice(0, 3).map(i => `<li>${esc(i)}</li>`).join('')}</ul></div>`;
+  };
+  const tonight = ev
+    ? `<div class="card"><h2>Tonight<span>${fmt(S.today, { weekday: 'long', month: 'short', day: 'numeric' })}</span></h2>
+        <div class="tl">${ev.blocks.map(b => block(b, ev.slots[b.id])).join('')}</div></div>`
+    : `<div class="card"><h2>Free today<span>${fmt(S.today, { weekday: 'long', month: 'short', day: 'numeric' })}</span></h2>
+        <div class="muted">${next ? `Next study: ${fmt(next.day, short)} (${inDays(days(S.today, next.day))}), ${deepIds(next.blocks).map(id => next.slots[id]).filter(Boolean).map(x => esc(slotName(x))).join(', ')}.` : 'No study days set. Add some in Schedule.'}</div></div>`;
+  return tonight + dueCard();
+}
+function dueCard() {
+  const until = addDays(S.today, 14);
+  const items = [
+    ...P.tests.filter(t => t.date >= S.today && t.date <= until).map(t => ({ date: t.date, subject: t.subject, title: t.label, test: true })),
+    ...(S.school.homework || []).filter(h => !h.done && h.due && h.due.slice(0, 10) <= until).map(h => ({ date: h.due.slice(0, 10), subject: h.subject, title: h.title })),
+  ].sort((a, b) => a.date.localeCompare(b.date));
+  return `<div class="card"><h2>Coming up<span>next two weeks</span></h2>${items.map(i => { const n = days(S.today, i.date);
+      return `<div class="row"><span class="dot" style="background:${subjColor(i.subject)}"></span>
+        <span class="grow ell">${esc(subjName(i.subject))} · ${esc(i.title)}</span>${i.test ? '<span class="tag red">test</span>' : ''}
+        <span class="muted small">${fmt(i.date, short)}</span>
+        <span style="color:${n < 0 ? 'var(--red)' : n <= 3 ? 'var(--red)' : n <= 7 ? 'var(--yellow)' : 'var(--mint)'};font-weight:600;width:58px;text-align:right">${n < 0 ? 'late' : n === 0 ? 'today' : n + 'd'}</span></div>`; }).join('')
+    || '<div class="muted">Nothing due. Add tests and homework in To-do.</div>'}</div>`;
+}
+
+/* ---------- Schedule: the week, and the blocks of the day you pick ---------- */
+let calScroll = null;   // where the day is scrolled to, kept across saves
+let weekOffset = 0, sel = null, scope = null, edit = null, copyOpen = false, rotOpen = false;
+const PX = 1.1;   // pixels per minute
+const textOn = hex => { const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+  return (0.299 * r + 0.587 * g + 0.114 * b) > 150 ? '#111' : '#fff'; };
+const changed = day => S.dates && day in S.dates;
+// The calendar starts today and shows the next 7 days; ‹ › move a week at a time.
+const baseWeek = () => S.today;
+
+function schedule() {
+  sel ??= S.today;
+  return calendar() + dayEditor();
+}
+function calendar() {
+  const mon = addDays(baseWeek(), 7 * weekOffset), week = [...Array(7)].map((_, i) => addDays(mon, i));
+  const all = week.flatMap(blocksOn);
+  const from = 0, to = 24 * 60;   // the whole day; it scrolls, and opens at your first block
+  const hours = []; for (let m = from; m < to; m += 60) hours.push(m);
+  const d = new Date(), nowMin = d.getHours() * 60 + d.getMinutes();
+  const allDay = day => [
+    ...P.tests.filter(t => t.date === day).map(t => `<div class="ad test" title="${esc(t.detail || '')}">${esc(subjName(t.subject))} · ${esc(t.label)}</div>`),
+    ...(S.school.homework || []).filter(h => !h.done && h.due && h.due.slice(0, 10) === day).map(h => `<div class="ad hw" style="border-color:${subjColor(h.subject)}">${esc(subjName(h.subject))} · ${esc(h.title)}</div>`)].join('');
+  // Planned evenings (the next two weeks) show the subject; other days show the bare blocks.
+  // Today's blocks sit where tonight's pauses pushed them, as on the HUD; the stored times stay as set.
+  const events = day => {
+    const ev = P.evenings.find(e => e.day === day), list = ev ? ev.blocks : blocksOn(day), times = day === S.today ? shift(list) : null;
+    return list.map((b, k) => {
+      const a = times ? times[k].a : minutesOf(b.start), z = times ? times[k].b : minutesOf(b.end);
+      const moved = a !== minutesOf(b.start) || z !== minutesOf(b.end);
+      const when = `${clock(hhmm(a))} – ${clock(hhmm(z))}`, tip = moved ? ` title="Pushed back by pauses (set for ${clock(b.start)} – ${clock(b.end)})"` : '';
+      const top = (a - from) * PX, h = (z - a) * PX - 2;
+      const x = ev?.slots[b.id];
+      if (!x) return `<div class="ev tpl" style="top:${top}px;height:${h}px"${tip}><b>${b.kind === 'fixed' ? esc(subjName(b.subject)) : esc(b.label)}</b><span>${when}</span></div>`;
+      const col = x.sweep ? '#5b5b60' : slotColor(x), fg = x.sweep ? '#fff' : textOn(col);
+      const task = x.sweep ? x.sweep.map(w => w.s.short).join(', ') : x.logged ? x.logged.what : (x.work?.[0] ? taskTitle(x.work[0]) : '');
+      return `<div class="ev" style="top:${top}px;height:${h}px;background:${col};color:${fg}"${tip}>
+        <b>${esc(slotName(x))}${x.test ? ' · prep' : ''}</b><span>${when}${moved ? ' · moved' : ''}</span>${h > 54 ? `<i>${esc(task)}</i>` : ''}</div>`;
+    }).join('');
+  };
+  const range = `${fmt(week[0], { month: 'short', day: 'numeric' })} – ${fmt(week[6], { month: dOf(week[6]).getMonth() === dOf(week[0]).getMonth() ? undefined : 'short', day: 'numeric' })}, ${dOf(week[6]).getFullYear()}`;
+  const letter = rotationLetter(S.today);
+  return `<div class="card cal"><div class="calbar"><button class="btn" data-week="0">Today</button>
+      <button class="nav" data-week="-1" aria-label="Previous week">‹</button><button class="nav" data-week="1" aria-label="Next week">›</button>
+      <b>${range}</b><span class="muted small">Click an empty time to add a block</span><span class="grow"></span>
+      <span class="muted small">${letter ? `Today is a ${letter} day` : S.rotation ? 'No school today' : 'No A–D day rotation'}</span><button class="btn link" id="rotToggle">${S.rotation ? 'Fix rotation' : 'Set one'}</button></div>
+    ${rotOpen ? `<div class="rot"><span class="muted small">If a holiday shifted the A–D days, set one date right:</span>
+      <input type="date" id="rotDate" value="${S.rotation?.anchor || S.today}"><span class="muted">is a</span>
+      <select id="rotLetter">${['A', 'B', 'C', 'D'].map(L => `<option${S.rotation?.letter === L ? ' selected' : ''}>${L}</option>`).join('')}</select>
+      <span class="muted">day</span><button class="btn p" id="saveRot">Save</button></div>` : ''}
+    <div class="calscroll"><div class="grid">
+      <div class="corner"></div>
+      ${week.map(day => { const off = !blocksOn(day).length, L = rotationLetter(day);
+        return `<div class="dh${day === S.today ? ' today' : ''}${off ? ' off' : ''}${day === sel ? ' sel' : ''}" data-pick="${day}">
+          <span>${fmt(day, { weekday: 'short' }).toUpperCase()}</span><em>${dOf(day).getDate()}</em>
+          <small>${[L ? L + ' day' : '', changed(day) ? '<b>changed</b>' : ''].filter(Boolean).join(' · ')}</small></div>`; }).join('')}
+      <div class="gut top"></div>${week.map(day => `<div class="adcell">${allDay(day)}</div>`).join('')}
+      <div class="gut">${hours.map(m => `<div style="height:${60 * PX}px"><span>${String(m / 60).padStart(2, '0')}:00</span></div>`).join('')}</div>
+      ${week.map(day => `<div class="col${blocksOn(day).length ? '' : ' off'}${day < S.today ? ' past' : ''}${day === sel ? ' sel' : ''}" data-pick="${day}" style="height:${(to - from) * PX}px">
+          ${hours.map(() => `<div class="hr" style="height:${60 * PX}px"></div>`).join('')}${day >= S.today ? '<div class="ghost"></div>' : ''}${events(day)}
+          ${day === S.today && nowMin >= from && nowMin <= to ? `<div class="now" style="top:${(nowMin - from) * PX}px"></div>` : ''}</div>`).join('')}
+    </div></div></div>`;
+}
+
+// The blocks being edited: every <weekday>, or only the picked date.
+function editing() {
+  const wd = dOf(sel).getDay();
+  scope ??= changed(sel) ? 'date' : 'week';
+  if (!edit || edit.day !== sel || edit.scope !== scope) {
+    const src = scope === 'date' ? (S.dates?.[sel] ?? S.week[wd] ?? []) : (S.week[wd] ?? []);
+    edit = { day: sel, scope, blocks: src.map(b => ({ ...b })).sort((a, b) => a.start.localeCompare(b.start)) };
+  }
+  return edit;
+}
+const KINDS = b => `<option value="deep"${b.kind === 'deep' ? ' selected' : ''}>Planner picks</option>
+  <option value="sweep"${b.kind === 'sweep' ? ' selected' : ''}>Quick review</option>
+  <optgroup label="Always">${S.subjects.map(x => `<option value="fixed:${x.id}"${b.kind === 'fixed' && b.subject === x.id ? ' selected' : ''}>${esc(x.short)}</option>`).join('')}</optgroup>`;
+function dayEditor() {
+  const e = editing(), wd = dOf(sel).getDay(), name = DAYS[wd], date = fmt(sel, { month: 'short', day: 'numeric' });
+  let n = 0;
+  const rows = e.blocks.map((b, i) => `<div class="blk">
+      <span class="n">${b.kind === 'sweep' ? 'Review' : `Block ${++n}`}</span>
+      <input type="time" value="${b.start}" data-bi="${i}" data-bf="start" aria-label="Start"><span class="muted">to</span>
+      <input type="time" value="${b.end}" data-bi="${i}" data-bf="end" aria-label="End">
+      <select data-bi="${i}" data-bf="kind" aria-label="What this block is for">${KINDS(b)}</select>
+      <span class="grow muted small">${dur(Math.max(0, minutesOf(b.end) - minutesOf(b.start)))}</span>
+      <button class="x" data-bdel="${i}" aria-label="Remove this block">×</button></div>`).join('');
+  const who = e.scope === 'week' ? `every ${name}` : date;
+  return `<div class="card"><h2>${fmt(sel, { weekday: 'long', month: 'long', day: 'numeric' })}
+      <div class="seg" role="group" aria-label="Which days to change">
+        <button data-scope="week" aria-pressed="${e.scope === 'week'}">Every ${name}</button>
+        <button data-scope="date" aria-pressed="${e.scope === 'date'}">Only ${date}</button></div></h2>
+    ${rows || `<div class="muted" style="padding:6px 0">No study ${e.scope === 'week' ? `on ${name}s` : `on ${date}`}.</div>`}
+    <div class="add"><button class="btn" id="addBlock">+ Add block</button>
+      ${e.blocks.length ? `<button class="btn" id="clearDay">No study ${e.scope === 'week' ? `on ${name}s` : 'this day'}</button>` : ''}
+      ${e.scope === 'week' && e.blocks.length ? `<button class="btn" id="copyToggle">Copy to other days…</button>` : ''}
+      <span class="grow"></span>
+      ${e.scope === 'date' && changed(sel) ? `<button class="btn link" id="repeatDate">Make this every ${name}</button><button class="btn link" id="resetDate">Back to a normal ${name}</button>` : ''}</div>
+    ${copyOpen && e.scope === 'week' ? `<div class="copy"><span class="muted small">Same blocks on</span>
+      <span class="chips">${ORDER.filter(d => d !== wd).map(d => `<button class="chip" data-copyday="${d}" aria-pressed="false">${DAYS[d].slice(0, 3)}</button>`).join('')}</span>
+      <button class="btn p" id="copyApply">Copy</button></div>` : ''}
+    <p class="hint">Changes apply to ${who} and save as you go.${e.scope === 'week' ? ` To change just one date, pick Only ${date}.` : ''}
+      Planner picks: tests in the next 7 days first, then your lowest grade, then what you're behind on. Quick review: one cold question each from two subjects you didn't study that night.</p></div>`;
+}
+async function saveDay(msg) {
+  const body = edit.scope === 'week' ? { days: [dOf(sel).getDay()], blocks: edit.blocks } : { date: sel, blocks: edit.blocks };
+  try { S = await api('/api/settings/day', body); edit = null; toast(msg || 'Saved'); render(); }
+  catch (err) { toast(err.message, true); render(); }   // keep what you typed so you can fix it
+}
+
+// Clicking an empty time in the calendar: an hour-long block there, on that date only.
+const minuteAt = (e, col) => Math.floor((e.clientY - col.getBoundingClientRect().top) / PX / 30) * 30;
+function addAt(day, start) {
+  sel = day; scope = 'date'; edit = null; copyOpen = false;
+  const e = editing();
+  if (e.blocks.some(b => minutesOf(b.start) <= start && start < minutesOf(b.end))) { toast('There’s already a block then', true); render(); return; }
+  const next = e.blocks.map(b => minutesOf(b.start)).filter(m => m > start).sort((a, b) => a - b)[0];
+  const end = Math.min(start + 60, next ?? 24 * 60 - 1);
+  if (end - start < 15) { toast('No room there', true); render(); return; }
+  e.blocks.push({ start: hm(start), end: hm(end), kind: 'deep' });
+  saveDay(`Added ${clock(hm(start))} on ${fmt(day, short)} only`);
+}
+
+/* ---------- Subjects: one row each, everything about it inside ---------- */
+let openSub = null;
+function courseSelect(attr, sid, cur, seen) {
+  const list = [...new Set([...(seen || []), ...(cur ? [cur] : [])])];
+  return `<select ${attr}="${sid}">${['<option value="">Not linked</option>', ...list.map(c => `<option${c === cur ? ' selected' : ''}>${esc(c)}</option>`)].join('')}</select>`;
+}
+function subjects() {
+  return `<div class="card"><h2>Subjects<span>click one to change it</span></h2>
+    ${S.subjects.map(s => { const g = S.grades.courses?.[s.id], done = doneThisWeek(s.id), open = openSub === s.id;
+      return `<div class="sub" data-sub="${s.id}" aria-expanded="${open}">
+          <span class="dot" style="background:${s.color}"></span><b style="width:100px" class="ell">${esc(s.short)}</b>
+          <span class="grow muted small ell">${(s.meets || []).length ? `class ${s.meets.join('')}` : 'no class days'} · ${s.weekly} block${s.weekly === 1 ? '' : 's'} a week${g ? ` · ${esc(g.letter)}` : ''}</span>
+          ${offTag(s)}<span class="bar" title="Blocks logged since Monday"><i style="width:${Math.min(1, done / Math.max(1, s.weekly)) * 100}%"></i></span>
+          <span class="muted small" style="width:78px">${done} of ${s.weekly} done</span><span class="chev">›</span></div>
+        ${open ? subjectDetail(s, g) : ''}`; }).join('')}
+    <div class="add"><input class="grow" id="newSubj" placeholder="New subject, e.g. AP Physics"><button class="btn" id="addSubj">Add subject</button></div></div>`;
+}
+// SKILLS.md rows whose Status column disagrees with the mastery gate computed from the learning records
+function offTag(s) {
+  const off = (s.skills || []).filter(k => k.disagrees);
+  return off.length ? `<span class="tag red" title="${esc(off.map(k => `${k.skill}: SKILLS.md says ${k.status}, records say ${k.gateStatus} (${k.gate})`).join('\n'))}">${off.length} out of step</span>` : '';
+}
+function subjectDetail(s, g) {
+  return `<div class="detail">
+    <label>Name</label><div class="line"><input value="${esc(s.short)}" data-sf="short" data-sid="${s.id}" style="width:160px" aria-label="Name">
+      <input type="color" value="${s.color}" data-sf="color" data-sid="${s.id}" aria-label="Colour"></div>
+    <label>Class days</label><div class="line"><span class="chips">${['A', 'B', 'C', 'D'].map(L => `<button class="chip" data-meet="${s.id}" data-l="${L}" aria-pressed="${(s.meets || []).includes(L)}">${L}</button>`).join('')}</span>
+      <span class="muted small">PowerSchool fills these in on each sync</span></div>
+    <label>Blocks a week</label><div class="line">
+      <label class="small" style="display:flex;gap:6px;align-items:center"><input type="checkbox" data-auto="${s.id}" ${s.weeklyAuto !== false ? 'checked' : ''}> Auto</label>
+      ${s.weeklyAuto !== false ? `<span class="muted small">${s.autoWeekly}, from class days and grade</span>`
+        : `<input type="number" min="0" max="14" value="${s.weekly}" data-sf="weekly" data-sid="${s.id}" aria-label="Blocks a week"><span class="muted small">Auto would give ${s.autoWeekly}</span>`}</div>
+    <label>PowerSchool</label><div class="line">${courseSelect('data-ps-course', s.id, s.psCourse, S.grades.seen)}
+      <span class="small" style="color:${gradeColor(g?.letter)};font-weight:700">${esc(g?.letter || '')}</span></div>
+    <label>Google Classroom</label><div class="line">${courseSelect('data-gc-course', s.id, s.classroomCourse, S.school.seenCourses)}</div>
+    <label>AP Classroom</label><div class="line">${courseSelect('data-apc-course', s.id, s.apcCourse, S.school.apSeenCourses)}</div>
+    <label>Homework</label><div class="line"><label class="small" style="display:flex;gap:6px;align-items:center">
+      <input type="checkbox" data-hw="${s.id}" ${s.classroomHomework ? 'checked' : ''}> Bring in homework from Classroom and AP Classroom</label></div>
+    <label>Notes</label><div class="line muted small ell" title="${esc(s.state || '')}">${s.ok ? `STATE.md · ${s.tasks.length} tasks · ${s.gaps.length} gaps` : 'No STATE.md file yet'}</div>
+    ${(s.skills || []).length ? `<label>Skill map</label><div class="line"><span class="muted small">SKILLS.md · ${s.skills.length} rows · ${s.skills.filter(k => k.gate).length} asked · ${s.skills.filter(k => skillStatus(k) === 'shown').length} shown</span></div>` : ''}
+    <span></span><div class="line"><button class="btn danger" data-rmsub="${s.id}">Remove ${esc(s.short)}</button></div></div>`;
+}
+
+/* ---------- To-do: tests and homework, one list by date ---------- */
+let showDone = false, addKind = 'hw';
+function todo() {
+  const tests = (S.school.tests || []).filter(t => t.date >= addDays(S.today, -1)).map(t => ({ ...t, kind: 'tests', when: t.date, title: t.label }));
+  const hw = (S.school.homework || []).map(h => ({ ...h, kind: 'homework', when: h.due ? h.due.slice(0, 10) : null }));
+  const open = [...tests, ...hw.filter(h => !h.done)], done = hw.filter(h => h.done);
+  const weekEnd = addDays(S.today, 6);
+  const groups = [['Late', i => i.when && i.when < S.today], ['Next 7 days', i => i.when && i.when >= S.today && i.when <= weekEnd],
+                  ['Later', i => i.when && i.when > weekEnd], ['No date', i => !i.when]];
+  const src = { classroom: 'Classroom', 'classroom-sync': 'Classroom', 'apclassroom-sync': 'AP Classroom' };
+  const item = i => `<div class="row">
+      ${i.kind === 'homework' ? `<input type="checkbox" data-toggle="${i.id}" ${i.done ? 'checked' : ''} aria-label="Done">` : '<span style="width:16px;text-align:center;color:var(--red)">⚑</span>'}
+      <span class="dot" style="background:${subjColor(i.subject)}"></span>
+      <span class="grow ell${i.done ? ' done' : ''}">${esc(subjName(i.subject))} · ${esc(i.title)}</span>
+      ${i.kind === 'tests' ? '<span class="tag red">test</span>' : ''}${src[i.source] ? `<span class="tag">${src[i.source]}</span>` : ''}
+      <span class="small muted" style="width:96px;text-align:right">${i.when ? fmt(i.when, short) + (i.due && i.due.slice(11, 16) !== '23:59' ? ' ' + clock(i.due.slice(11, 16)) : '') : ''}</span>
+      <button class="x" data-rm="${i.id}" data-kind="${i.kind}" aria-label="Remove">×</button></div>`;
+  const body = groups.map(([name, test]) => { const list = open.filter(test).sort((a, b) => (a.when || '').localeCompare(b.when || ''));
+    return list.length ? `<div class="group">${name}</div>${list.map(item).join('')}` : ''; }).join('');
+  return `<div class="card"><h2>To-do<span>tests get prep blocks in the 7 days before</span></h2>
+    ${body || '<div class="muted">Nothing to do.</div>'}
+    ${done.length ? `<button class="btn link" id="showDone">${showDone ? 'Hide' : 'Show'} ${done.length} done</button>${showDone ? done.map(item).join('') : ''}` : ''}
+    <form class="add" id="addTodo">
+      <div class="seg" role="group" aria-label="Kind"><button type="button" data-addkind="hw" aria-pressed="${addKind === 'hw'}">Homework</button>
+        <button type="button" data-addkind="test" aria-pressed="${addKind === 'test'}">Test</button></div>
+      <select name="subject" aria-label="Subject">${subjOptions()}</select>
+      <input class="grow" name="text" placeholder="${addKind === 'test' ? 'Which test? e.g. Unit 3 quiz' : 'What homework?'}" required>
+      <input type="date" name="date" ${addKind === 'test' ? 'required' : ''} aria-label="Date">${addKind === 'hw' ? '<input type="time" name="time" aria-label="Due time">' : ''}
+      <button class="btn p">Add</button></form></div>`;
+}
+
+/* ---------- Accounts: where grades, tests and homework come from ---------- */
+function accounts() {
+  const when = at => at ? new Date(at).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }) : 'never';
+  const row = (name, what, sync, who, buttons) => {
+    const dot = sync.running ? 'var(--yellow)' : sync.signedOut || sync.ok === false ? 'var(--red)' : sync.at ? 'var(--green)' : 'var(--text-3)';
+    return `<div class="row" style="align-items:flex-start"><span class="dot" style="background:${dot};margin-top:6px"></span>
+      <div class="grow"><b>${name}</b> <span class="muted small">· ${what}</span>
+        <div class="small">${who}</div><div class="muted small">${esc(sync.message || '')}${sync.at ? ` · last sync ${when(sync.at)}` : ''}</div></div>
+      ${bridge ? `<div class="line" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">${buttons}
+        <button class="btn p" data-app="${buttons.match(/data-app="(\w+)-/)[1]}-sync" ${sync.running ? 'disabled' : ''}>${sync.running ? 'Syncing…' : 'Sync now'}</button></div>` : ''}</div>`;
+  };
+  const ps = S.grades.sync || {}, gc = S.school.sync || {}, apc = S.school.apSync || {};
+  return `<div class="card"><h2>Accounts<span>sync when the app starts and every 6 hours</span></h2>
+    ${row('PowerSchool', 'grades and class days', ps, ps.account ? `Signed in as ${esc(ps.account)}` : 'Not signed in',
+      `<button class="btn" data-app="ps-signin">${ps.account ? 'Change login…' : 'Sign in…'}</button>${ps.account ? '<button class="btn" data-app="ps-signout">Sign out</button>' : ''}`)}
+    ${row('Google Classroom', 'tests and homework', gc, gc.signedOut ? '<span style="color:var(--red)">Signed out of Google</span>' : gc.account ? `Signed in as ${esc(gc.account)}` : gc.at ? 'Signed in' : 'Not connected',
+      '<button class="btn" data-app="gc-signin">Sign in…</button>')}
+    ${row('AP Classroom', 'assignments and due dates', apc, apc.signedOut ? '<span style="color:var(--red)">Signed out of College Board</span>' : apc.at ? 'Signed in' : 'Not connected',
+      '<button class="btn" data-app="apc-signin">Sign in…</button>')}
+    <p class="hint">${bridge ? 'Your PowerSchool login is kept in the Mac’s Keychain. Google and College Board keep you signed in inside the app, like a browser. Which course feeds each subject is set in Subjects.'
+      : 'Open Settings from the Study HUD app (menu-bar icon → Settings…) to sign in and sync.'}</p></div>`;
+}
+
+/* ---------- glue ---------- */
+function hudSize() {
+  try { const n = Number(localStorage.getItem('hud.size') || 100); return Number.isFinite(n) ? Math.max(75, Math.min(150, n)) : 100; } catch { return 100; }
+}
+function hud() {
+  return `<h2>HUD</h2><p class="muted">Adjust the floating Study HUD. Changes apply immediately and are saved.</p>
+    <section class="card" style="padding:24px;max-width:560px">
+      <label for="hudSize"><b>HUD size</b></label>
+      <div style="display:flex;align-items:center;gap:16px;margin:20px 0">
+        <span class="muted">Small</span><input id="hudSize" type="range" min="75" max="150" step="5" value="${hudSize()}" style="flex:1;min-width:100px" aria-describedby="hudSizeValue">
+        <span class="muted">Large</span><output id="hudSizeValue" for="hudSize">${hudSize()}%</output>
+      </div><button id="hudSizeReset">Reset to 100%</button>
+      <p class="muted small">Scales the HUD’s icons, text, and spacing together. Drag the HUD to move it along any screen edge.</p>
+    </section>`;
+}
+function setHUDSize(value) {
+  const n = Math.max(75, Math.min(150, Number(value)));
+  localStorage.setItem('hud.size', JSON.stringify(n));
+  bridge?.postMessage({type: 'hud-size', value: n});
+  $('hudSizeValue').textContent = n + '%';
+  $('hudSize').value = n;
+}
+document.addEventListener('input', e => { if (e.target.id === 'hudSize') setHUDSize(e.target.value); });
+document.addEventListener('click', e => { if (e.target.closest('#hudSizeReset')) setHUDSize(100); });
+
+function render() {
+  P = plan();
+  const asOf = (n, d) => `<b>${n}</b> ${d ? fmt(d, { month: 'short', day: 'numeric' }) : '–'}`;
+  $('src').innerHTML = `${asOf('Grades', S.grades.as_of)} · ${asOf('Classroom', S.school.as_of)}`;
+  if (!['today', 'schedule', 'subjects', 'todo', 'accounts', 'hud'].includes(tab)) tab = 'today';
+  $('tabs').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tab === tab)));
+  $('view').innerHTML = { today, schedule, subjects, todo, accounts, hud }[tab]();
+  const sc = document.querySelector('.calscroll');
+  if (sc) {
+    if (calScroll == null) {
+      const mon = addDays(baseWeek(), 7 * weekOffset), starts = [...Array(7)].flatMap((_, i) => blocksOn(addDays(mon, i))).map(b => minutesOf(b.start));
+      const d = new Date(); if (weekOffset === 0) starts.push(d.getHours() * 60 + d.getMinutes());
+      calScroll = Math.max(0, ((starts.length ? Math.min(...starts) : 17 * 60) - 60) * PX);
+    }
+    sc.scrollTop = calScroll;
+    sc.onscroll = () => { calScroll = sc.scrollTop; };
+  }
+}
+
+$('tabs').onclick = e => { const b = e.target.closest('button'); if (!b) return; tab = b.dataset.tab; try { localStorage.setItem('sp.tab', tab); } catch {} render(); };
+
+$('view').addEventListener('click', e => {
+  const t = e.target.closest('button, [data-pick], [data-sub]') || e.target;
+  // schedule
+  if (t.dataset.week != null) { weekOffset = +t.dataset.week === 0 ? 0 : weekOffset + +t.dataset.week; if (+t.dataset.week === 0) sel = S.today; calScroll = null; render(); return; }
+  if (t.classList.contains('col') && !e.target.closest('.ev') && t.dataset.pick >= S.today) { addAt(t.dataset.pick, minuteAt(e, t)); return; }
+  if (t.dataset.pick) { if (sel !== t.dataset.pick) { sel = t.dataset.pick; scope = null; edit = null; copyOpen = false; } render(); return; }
+  if (t.dataset.scope) { scope = t.dataset.scope; copyOpen = false; render(); return; }
+  if (t.id === 'rotToggle') { rotOpen = !rotOpen; render(); return; }
+  if (t.id === 'saveRot') { save('/api/settings/rotation', { anchor: $('rotDate').value, letter: $('rotLetter').value }, 'Rotation saved').then(ok => { if (ok) { rotOpen = false; render(); } }); return; }
+  if (t.id === 'addBlock') {
+    const last = edit.blocks[edit.blocks.length - 1], from = last ? minutesOf(last.end) + 10 : 19 * 60;
+    if (from > 23 * 60 + 29) { toast(`No room after ${clock(last.end)}. Move a block earlier first.`, true); return; }
+    edit.blocks.push({ start: hm(from), end: hm(Math.min(from + 60, 23 * 60 + 59)), kind: 'deep' });
+    saveDay(); return;
+  }
+  if (t.dataset.bdel != null) { edit.blocks.splice(+t.dataset.bdel, 1); saveDay(); return; }
+  if (t.id === 'clearDay') { edit.blocks = []; saveDay(); return; }
+  if (t.id === 'resetDate') { save('/api/settings/day', { date: sel, blocks: null }, `Back to a normal ${DAYS[dOf(sel).getDay()]}`).then(() => { scope = 'week'; edit = null; render(); }); return; }
+  if (t.id === 'repeatDate') {
+    const wd = dOf(sel).getDay(), blocks = edit.blocks;
+    api('/api/settings/day', { days: [wd], blocks }).then(() => save('/api/settings/day', { date: sel, blocks: null }, `Now every ${DAYS[wd]}`))
+      .then(() => { scope = 'week'; edit = null; render(); }).catch(err => toast(err.message, true));
+    return;
+  }
+  if (t.id === 'copyToggle') { copyOpen = !copyOpen; render(); return; }
+  if (t.dataset.copyday) { t.setAttribute('aria-pressed', String(t.getAttribute('aria-pressed') !== 'true')); return; }
+  if (t.id === 'copyApply') {
+    const to = [...document.querySelectorAll('[data-copyday][aria-pressed="true"]')].map(b => +b.dataset.copyday);
+    if (!to.length) { toast('Pick at least one day', true); return; }
+    save('/api/settings/day', { days: to, blocks: edit.blocks }, `Copied to ${to.map(d => DAYS[d].slice(0, 3)).join(', ')}`).then(ok => { if (ok) { copyOpen = false; render(); } });
+    return;
+  }
+  // subjects
+  if (t.dataset.sub) { openSub = openSub === t.dataset.sub ? null : t.dataset.sub; render(); return; }
+  if (t.dataset.meet) {
+    const s = S.subjects.find(x => x.id === t.dataset.meet), set = new Set(s.meets || []);
+    set.has(t.dataset.l) ? set.delete(t.dataset.l) : set.add(t.dataset.l);
+    save('/api/settings/subject', { id: s.id, meets: [...set] }, `${s.short}: class on ${[...set].sort().join('') || 'no'} days`); return;
+  }
+  if (t.id === 'addSubj') { const n = $('newSubj').value.trim(); if (n) save('/api/settings/subject', { name: n }, `${n} added`); return; }
+  if (t.dataset.rmsub && confirm('Remove this subject from the planner? Its STATE.md file is not touched.')) { openSub = null; save('/api/settings/subject', { id: t.dataset.rmsub, remove: true }, 'Removed'); return; }
+  // to-do
+  if (t.dataset.addkind) { addKind = t.dataset.addkind; render(); return; }
+  if (t.id === 'showDone') { showDone = !showDone; render(); return; }
+  if (t.dataset.rm) { save(`/api/${t.dataset.kind}`, { action: 'remove', id: t.dataset.rm }, 'Removed'); return; }
+  if (e.target.dataset.toggle) { save('/api/homework', { action: 'toggle', id: e.target.dataset.toggle }, e.target.checked ? 'Done' : 'Not done'); return; }
+  // accounts
+  if (t.dataset.app && bridge) { bridge.postMessage({ type: t.dataset.app }); toast(/-sync$/.test(t.dataset.app) ? 'Syncing…' : 'Opening…'); }
+});
+$('view').addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.bi != null) {
+    const b = edit.blocks[+t.dataset.bi];
+    if (t.dataset.bf === 'kind') { const [kind, subject] = t.value.split(':'); b.kind = kind; if (subject) b.subject = subject; else delete b.subject; saveDay(); }
+    else b[t.dataset.bf] = t.value;   // times save when you leave the row, not on every keystroke
+    return;
+  }
+  const sid = t.dataset.sid;
+  if (t.dataset.sf) save('/api/settings/subject', { id: sid, [t.dataset.sf]: t.dataset.sf === 'weekly' ? +t.value : t.value });
+  if (t.dataset.auto) save('/api/settings/subject', t.checked ? { id: t.dataset.auto, weeklyAuto: true } : { id: t.dataset.auto, weekly: S.subjects.find(s => s.id === t.dataset.auto).weekly }, t.checked ? 'Auto' : 'Set it yourself');
+  if (t.dataset.psCourse != null) save('/api/settings/subject', { id: t.dataset.psCourse, psCourse: t.value }, t.value ? 'Linked. Sync to pull its grade.' : 'Unlinked');
+  if (t.dataset.gcCourse != null) save('/api/settings/subject', { id: t.dataset.gcCourse, classroomCourse: t.value }, t.value ? 'Linked' : 'Unlinked');
+  if (t.dataset.apcCourse != null) save('/api/settings/subject', { id: t.dataset.apcCourse, apcCourse: t.value }, t.value ? 'Linked' : 'Unlinked');
+  if (t.dataset.hw) save('/api/settings/subject', { id: t.dataset.hw, classroomHomework: t.checked }, t.checked ? 'Homework on' : 'Homework off');
+});
+$('view').addEventListener('mousemove', e => {
+  const col = e.target.closest('.col'), g = col?.querySelector('.ghost');
+  if (!g) return;
+  if (e.target.closest('.ev')) { g.style.display = 'none'; return; }
+  const m = minuteAt(e, col);
+  g.style.display = ''; g.style.top = m * PX + 'px'; g.style.height = 60 * PX - 2 + 'px'; g.textContent = '+ ' + clock(hm(m));
+});
+$('view').addEventListener('focusout', e => {
+  const t = e.target;
+  if (!['start', 'end'].includes(t.dataset.bf) || e.relatedTarget?.closest('.blk') === t.closest('.blk')) return;
+  const saved = (edit.scope === 'date' ? S.dates?.[sel] ?? S.week[dOf(sel).getDay()] : S.week[dOf(sel).getDay()]) || [];
+  if (JSON.stringify(saved.map(b => [b.start, b.end])) !== JSON.stringify(edit.blocks.map(b => [b.start, b.end]))) saveDay();
+});
+$('view').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset.bf) e.target.blur(); });
+$('view').addEventListener('submit', e => {
+  e.preventDefault();
+  const f = new FormData(e.target), test = addKind === 'test';
+  save(test ? '/api/tests' : '/api/homework', { action: 'add', subject: f.get('subject'), [test ? 'label' : 'title']: f.get('text'), date: f.get('date'), time: f.get('time') }, 'Added');
+});
+
+(async () => {
+  try { S = await api('/api/state'); } catch { $('view').innerHTML = '<div class="card">The server isn’t running. Start it with Study Hall.command.</div>'; return; }
+  render();
+  // Follow changes made elsewhere (a sync finishing, the HUD), unless you're typing.
+  setInterval(async () => {
+    if (document.activeElement?.matches('input, select')) return;
+    try { const { v } = await api('/api/version'); if (v !== S.version) { S = await api('/api/state'); render(); } } catch {}
+  }, 2000);
+  // A running pause keeps pushing today's blocks back, so the calendar redraws while it lasts.
+  setInterval(() => { if (tab === 'schedule' && pausedNow() && !document.activeElement?.matches('input, select')) render(); }, 30e3);
+})();
+</script>
+</body>
+</html>

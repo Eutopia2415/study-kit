@@ -1,0 +1,2007 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Study Room</title>
+<link rel="icon" id="fav" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231b1a17'/><path d='M0 7a7 7 0 0 1 7-7h18a7 7 0 0 1 7 7v3H0z' fill='%238e8e93'/><rect x='5' y='14' width='10' height='13' rx='1.5' fill='%23f1ecdf'/><rect x='18.5' y='15' width='9' height='3' rx='1.5' fill='%23f1ecdf' opacity='.6'/><rect x='18.5' y='21' width='6' height='3' rx='1.5' fill='%23f1ecdf' opacity='.6'/></svg>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..700&display=swap" media="print" onload="this.media='all'">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+  // Theme before first paint: saved choice, else the Mac's setting.
+  (() => { let t = new URLSearchParams(location.search).get('theme'); try { t = t || localStorage.getItem('room-theme'); } catch (e) {}
+    document.documentElement.dataset.theme = t || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'); })();
+</script>
+<style>
+  /* The room is an annotated edition: the text is a page on the left, the block's exchange runs beside it as a
+     transcript, and each subject binds the volume in its own cloth colour. No cards, no glow. */
+  :root, [data-theme="dark"] {
+    --ground: color-mix(in oklab, var(--subject) 5%, #121110); --leaf: color-mix(in oklab, var(--subject) 4%, #1a1917);
+    --field: color-mix(in oklab, var(--subject) 3%, #201f1c); --card: #252320; --card-2: #2b2926;
+    --text: #ece7db; --text-2: #b5afa1; --text-3: #8d887b;
+    --line: rgba(236, 231, 219, .1); --line-2: rgba(236, 231, 219, .22); --tint: rgba(236, 231, 219, .06);
+    --cloth: color-mix(in oklch, var(--subject) 46%, #0b0a09); --on-cloth: #f6f1e6;
+    --accent: color-mix(in oklab, var(--subject) 72%, #fff); --mark: color-mix(in oklab, var(--subject) 24%, transparent);
+    --good: #86d3a0; --good-ink: #06200f; --amber: #e9bd58; --amber-ink: #231a00; --red: #f0766a; --warn-text: #e9bd58;
+    --lift: 0 10px 30px rgba(0, 0, 0, .4);
+    color-scheme: dark;
+  }
+  [data-theme="light"] {
+    --ground: color-mix(in oklab, var(--subject) 4%, #f1ecdf); --leaf: #fdfbf5;
+    --field: #fffdf8; --card: #fffdf8; --card-2: #f4f0e6;
+    --text: #1d1a14; --text-2: #575249; --text-3: #676257;
+    --line: rgba(29, 26, 20, .11); --line-2: rgba(29, 26, 20, .26); --tint: rgba(29, 26, 20, .05);
+    --cloth: color-mix(in oklch, var(--subject) 56%, #0b0a09); --on-cloth: #fdf9ef;
+    --accent: color-mix(in oklch, var(--subject) 52%, #0b0a09); --mark: color-mix(in oklab, var(--subject) 17%, transparent);
+    --good: #15733b; --good-ink: #ffffff; --amber: #d99a00; --amber-ink: #231a00; --red: #b52f26; --warn-text: #8a5208;
+    --lift: 0 8px 24px rgba(40, 30, 20, .12);
+    color-scheme: light;
+  }
+  :root { --subject: #8e8e93; --on-subject: #fff; --bar-h: 46px; --gut: 0px;
+          --ease: cubic-bezier(.16, 1, .3, 1); --out: cubic-bezier(.4, 0, 1, 1); --fast: .15s;
+          --serif: "Literata", "Iowan Old Style", "Charter", Georgia, serif;
+          --sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; overscroll-behavior: none; }   /* the page stops at its ends: no rubber-band bounce carrying the bar and the text with it */
+  html { scroll-padding-top: calc(var(--bar-h) + 20px); scrollbar-color: var(--line-2) transparent; }
+  body { color: var(--text); font: 15px/1.5 var(--sans); font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+         background-color: var(--ground); min-height: 100dvh; transition: background-color .35s ease; }
+  ::selection { background: color-mix(in oklab, var(--subject) 38%, transparent); }
+  button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  textarea, input { font: inherit; color: var(--text); caret-color: var(--accent); }
+  textarea::placeholder { color: var(--text-3); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* the spine: subject, block clock, the item in hand */
+  .bar { position: sticky; top: 0; z-index: 6; height: var(--bar-h); background: var(--cloth); color: var(--on-cloth); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px;
+         padding: 0 12px 0 20px; transition: background-color .35s ease; view-transition-name: bar; }
+  .vol { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+  .vol b { font: 600 14px/1 var(--sans); white-space: nowrap; }
+  .vol span { font-size: 12.5px; opacity: .68; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .clock { font: 600 15px/1 var(--sans); letter-spacing: .02em; min-width: 5ch; text-align: center; transition: opacity .3s ease; }
+  .clock.paused { opacity: .5; }
+  .bar-end { justify-self: end; display: flex; align-items: center; gap: 4px; min-width: 0; }
+  .item { display: none; }   /* the item in hand is named on the work panel itself */
+  .ic.txt { width: auto; padding: 0 11px 0 8px; display: inline-flex; align-items: center; gap: 7px; font: 500 12.5px/1 var(--sans); }
+  .item .n { opacity: .62; }
+  .item .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; opacity: .88; }
+  .mode { align-self: center; font: 600 11px/1 var(--sans); padding: 4px 7px; border-radius: 4px; white-space: nowrap; letter-spacing: .01em; }
+  .mode.teach { color: var(--on-subject); background: var(--subject); }
+  .mode.test { color: var(--text); box-shadow: inset 0 0 0 1.25px var(--text-2); }
+  .must { align-self: center; font: 600 11px/1 var(--sans); color: var(--amber-ink); background: var(--amber); padding: 4px 7px; border-radius: 4px; white-space: nowrap; }
+  .ic { width: 30px; height: 30px; border-radius: 7px; border: 0; background: transparent; color: inherit; opacity: .72; display: grid; place-items: center; flex: none;
+        transition: opacity var(--fast) ease, background-color var(--fast) ease; }
+  .ic:hover { opacity: 1; background: color-mix(in srgb, currentColor 12%, transparent); }
+  .ic[aria-pressed="true"] { opacity: 1; background: color-mix(in srgb, currentColor 16%, transparent); }
+  .ic svg { transition: transform .3s var(--ease); } .ic:active svg { transform: scale(.88); }
+  .prog { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: color-mix(in srgb, var(--on-cloth) 12%, transparent); }
+  .prog i { display: block; height: 100%; background: var(--on-cloth); opacity: .62; transform-origin: left; transform: scaleX(0); transition: transform .25s linear; }
+
+  /* Two sides, each with one job. Reference: everything to look at (what the question points at first, then the text or
+     picture; above them the task's two pins, the question and the writing so far). Work: the tutor's latest words, then one panel with the question and where to answer.
+     The line between them can be dragged, and its button swaps the sides. */
+  .desk { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; min-height: calc(100dvh - var(--bar-h)); --src-w: 46%; }
+  .desk.has-src { grid-template-columns: minmax(0, var(--src-w)) 0 minmax(0, 1fr); }
+  .desk.has-src.swap { grid-template-columns: minmax(0, 1fr) 0 minmax(0, var(--src-w)); }
+  .desk.swap .leaf { order: 3; border-right: 0; border-left: 1px solid var(--line); } .desk.swap .split { order: 2; } .desk.swap .talk { order: 1; }
+  .desk[data-src="prose"] { --src-w: 54%; } .desk[data-src="vis"], .desk[data-src="figure"], .desk[data-src="image"], .desk[data-src="video"] { --src-w: 48%; }
+  .desk[data-card="canvas"] { --src-w: 40%; }
+  .leaf { position: sticky; top: var(--bar-h); height: calc(100dvh - var(--bar-h)); overflow: auto; overscroll-behavior: none; background: var(--leaf); border-right: 1px solid var(--line);
+          --lp: clamp(22px, 3.4vw, 48px); padding: 30px var(--lp) 36px; scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; container: leaf / inline-size; view-transition-name: leaf;
+          transition: background-color .35s ease; display: flex; flex-direction: column; }
+  .leaf > * { flex: none; min-width: 0; }
+  #ctxbox { order: 1; } #source { order: 2; }
+  /* the pins stay put at the top while the card's own text scrolls under them: the question and the learner's writing are never out of sight */
+  #pins:not(:empty) { order: 0; position: sticky; top: -30px; z-index: 2; margin: -30px calc(-1 * var(--lp)) 0; padding: 24px var(--lp) 16px; background: var(--leaf);
+    border-bottom: 1px solid var(--line-2); max-height: 64%; overflow-y: auto; scrollbar-width: thin; transition: background-color .35s ease; }
+  .leaf > .sep.ap { margin-top: 0; padding-top: 22px; border-top: 0; }
+  #pins:not(:has(~ :not(:empty))) { border-bottom: 0; }   /* nothing under the pins: no rule */
+  .desk[data-card="lesson"] #source { order: 4; }   /* a lesson's picture follows its steps: what the question points at stays on top */
+  .leaf > .sep { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--line-2); }
+  .leaf > :empty { display: none; }
+  .desk:not(.has-src) .leaf, .desk:not(.has-src) .split { display: none; }
+  /* the dividing line: hover it to drag the split; its button swaps the sides; double-click puts it back */
+  .split { position: sticky; top: var(--bar-h); height: calc(100dvh - var(--bar-h)); width: 16px; margin-left: -8px; z-index: 4; cursor: col-resize; touch-action: none; display: grid; place-items: center; }
+  .split::before { content: ""; position: absolute; top: 0; bottom: 0; left: 7px; width: 2px; background: var(--accent); opacity: 0; transition: opacity var(--fast) ease; }
+  .split:hover::before, .split:focus-visible::before, .split.drag::before { opacity: .7; }
+  .split:focus-visible { outline: none; }
+  .swapb { position: relative; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line-2); background: var(--card); color: var(--text-2); padding: 0; display: grid; place-items: center; cursor: pointer;
+           opacity: 0; transform: scale(.85); transition: opacity var(--fast) ease, transform .2s var(--ease), color var(--fast) ease, border-color var(--fast) ease; box-shadow: var(--lift); }
+  .split:hover .swapb, .split:focus-within .swapb { opacity: 1; transform: none; } .swapb:hover { color: var(--text); border-color: var(--text-3); } .split.drag .swapb { opacity: 0; }
+  body.resizing { cursor: col-resize; user-select: none; -webkit-user-select: none; }
+  .talk { padding: 34px clamp(20px, 3.6vw, 52px) 96px; min-width: 0; container: talk / inline-size; }   /* the page ends a little under the panel: no scrolling on into nothing */
+  .talk::before { content: ""; display: block; position: sticky; top: var(--bar-h); height: 30px; margin: -34px 0 4px; background: linear-gradient(var(--ground) 20%, transparent); z-index: 2; pointer-events: none; }
+  .talk-in { max-width: 680px; margin: 0 auto; }
+  /* a turn that would run past the bottom of the window is set tighter before anyone has to scroll */
+  .desk.tight .talk { padding-top: 20px; padding-bottom: 0; } .desk.tight .talk::before { margin-top: -20px; }
+  .desk.tight .thread:not(.open) .tn.brief { display: none; } .desk.tight .earlier { margin-bottom: 12px; }
+  .desk.tight .tn { margin-bottom: 10px; } .desk.tight .tn.now .sx { font-size: 16.5px; line-height: 1.55; }
+  .desk.tight .card { margin-top: 14px; } .desk.tight .pbody { padding: 16px 20px 16px; } .desk.tight .phead { padding-top: 8px; padding-bottom: 8px; }
+  .desk.tight .pbody h2 { font-size: 19px; margin-bottom: 12px; } .desk.tight .answer { min-height: 84px; } .desk.tight .askline { margin-top: 10px; }
+  /* still too tall, and the learner is already working on the card: the tutor's message, read by now, closes to two lines (press it to open) */
+  .desk.tight2 .answer { min-height: 62px; } .desk.tight2 .pbody h2 { font-size: 18px; margin-bottom: 10px; } .desk.tight2 .lcheck { margin-top: 10px; padding-top: 12px; }
+  .desk.tight2 .thread:not(.open) .tn.now:not(.full) { cursor: pointer; }
+  .desk.tight2 .thread:not(.open) .tn.now:not(.full) .sx { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+  .desk.tight2 .thread:not(.open) .tn.now:not(.full)::after { content: "Show all"; display: inline-block; margin-top: 3px; font: 500 12.5px/1.4 var(--sans); color: var(--text-2); text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+  .desk.tight .segs { margin-bottom: 12px; } .desk.tight .step { font-size: 16px; line-height: 1.55; padding-top: 4px; padding-bottom: 4px; } .desk.tight .lcheck { margin-top: 14px; padding-top: 14px; }
+  .desk[data-card="canvas"] .talk-in, .desk[data-card="mcq"] .talk-in { max-width: 780px; }
+  /* the exchange: only the turn in play shows (your last answer in brief, the tutor's reply); the rest is folded behind History.
+     The tutor speaks in the book face, the learner in the hand's. */
+  .thread { list-style: none; margin: 0; padding: 0; }
+  .tn { margin: 0 0 16px; color: var(--text-2); transition: color .4s ease; }
+  .tn.same { margin-top: -6px; }
+  .sp { display: block; font: 600 11px/1.6 var(--sans); letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); margin-bottom: 3px; user-select: none; }
+  .tn.same .sp, .tn.q .sp { display: none; }
+  .sx { min-width: 0; overflow-wrap: anywhere; }
+  .tn.tutor .sx { font: 16.5px/1.62 var(--serif); text-wrap: pretty; }
+  .tn.you .sx { font: 15px/1.6 var(--sans); white-space: pre-wrap; }
+  .tn.q .sx { font: 600 15.5px/1.5 var(--serif); text-wrap: pretty; }
+  .tn.ask .sx { font-style: italic; }
+  .tn.now { color: var(--text); } .tn.now .sx { font-size: 18px; line-height: 1.6; }
+  .tn.fold { display: none; } .thread.open .tn.fold { display: block; }
+  .tn.brief .sx { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; } .thread.open .tn.brief .sx { display: block; }
+  @keyframes set { from { opacity: 0; transform: translateY(7px); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
+  /* while the tutor is working: the lines still to come, ruled in one after another, the caret at the end of the last */
+  .sk { display: block; position: relative; width: var(--w, 90%); height: .56em; margin: .53em 0 1.06em; border-radius: 3px;
+        background: color-mix(in srgb, var(--text) 10%, transparent) linear-gradient(100deg, transparent 35%, color-mix(in srgb, var(--text) 13%, transparent) 50%, transparent 65%) 120% 0 / 250% 100% no-repeat;
+        animation: skdraw .55s var(--ease) backwards, shim 1.8s linear .6s infinite; }
+  .sk:nth-child(2) { animation-delay: .16s, .76s; } .sk:nth-child(3) { animation-delay: .32s, .92s; } .sk:nth-child(4) { animation-delay: .48s, 1.08s; }
+  .sk.end { margin-bottom: .53em; }
+  .sk.h { height: .8em; margin: 1.1em 0 .9em; }
+  .skbox { display: block; height: 96px; border: 1px solid var(--line-2); border-radius: 8px; opacity: .6; animation: skdraw .6s var(--ease) .4s backwards; }
+  .tn.skc { padding-top: 0; }
+  @keyframes skdraw { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+  @keyframes shim { from { background-position: 120% 0; } to { background-position: -60% 0; } }
+  .vis.loading { min-height: 46vh; background: var(--tint) linear-gradient(100deg, transparent 35%, color-mix(in srgb, var(--text) 8%, transparent) 50%, transparent 65%) 120% 0 / 250% 100% no-repeat; animation: shim 1.8s linear infinite; }
+  .vis > .mimg, .vis > .mfig, .vis > .mvid { transition: opacity .45s ease; } .vis.loading > * { opacity: 0; }
+  .caret { display: inline-block; width: 2px; height: 1.05em; vertical-align: -.16em; background: var(--accent); border-radius: 1px; animation: blink 1.05s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .earlier { display: flex; margin: 0 0 20px; }
+  .earlier button { border: 1px solid var(--line-2); background: none; border-radius: 999px; padding: 5px 13px 5px 10px; font: 500 12.5px/1.3 var(--sans); color: var(--text-2); display: inline-flex; align-items: center; gap: 7px;
+                    transition: color var(--fast) ease, border-color var(--fast) ease, background-color var(--fast) ease; }
+  .earlier button:hover { color: var(--text); border-color: var(--text-3); background: var(--tint); } .earlier svg { transition: transform .25s var(--ease); } .earlier button[aria-expanded="true"] svg { transform: rotate(90deg); }
+  #old { opacity: .8; padding-bottom: 6px; margin-bottom: 22px; border-bottom: 1px solid var(--line); }
+  /* asking the tutor something without answering: a named button under the panel, which opens one line */
+  .askline { margin-top: 14px; display: grid; gap: 10px; justify-items: start; }
+  .askb { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line-2); border-radius: 999px; background: transparent; color: var(--text-2); padding: 6px 13px 6px 10px; font: 500 13px/1.3 var(--sans);
+          transition: color var(--fast) ease, border-color var(--fast) ease, background-color var(--fast) ease, transform .12s var(--ease); }
+  .askb:hover { color: var(--text); border-color: var(--text-3); background: var(--tint); } .askb:active { transform: scale(.97); }
+  .askb[aria-expanded="true"] { background: var(--text); color: var(--ground); border-color: var(--text); }
+  .askrow { width: 100%; margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: start; animation: set .3s var(--ease); }
+  .askrow .answer { min-height: 42px; padding: 9px 12px; }
+
+  /* the card in hand: set flush with the speech column, no box */
+  /* the work panel: one sheet holding the question and where to answer it; its header names the item */
+  .card { margin: 22px 0 0; background: var(--leaf); border: 1px solid var(--line-2); border-radius: 12px; }
+  .phead { display: flex; align-items: center; gap: 10px; padding: 10px 22px 10px 24px; border-bottom: 1px solid var(--line); font: 600 12.5px/1.4 var(--sans); color: var(--text-2); }
+  .phead .pn { margin-left: auto; font-weight: 500; color: var(--text-3); } .phead .pt:empty { display: none; }
+  .pbody { padding: 24px 24px 22px; }
+  .pbody > h2:first-child { margin-top: 2px; }
+  .card.out { animation: out .1s var(--out) forwards; }
+  @keyframes in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes out { to { opacity: 0; transform: translateY(-4px); } }
+  h2 { font: 600 21px/1.4 var(--serif); letter-spacing: -.006em; margin: 0 0 16px; color: var(--text); text-wrap: pretty; }
+  h2 b { font-weight: 700; } h2 i { font-weight: 500; }
+  .card:focus, h2:focus { outline: none; }
+  /* what the question points at, right above it: the learner's own earlier words (set like a handed-in answer) or a quotation */
+
+  .rtext.mine p { font: 15.5px/1.6 var(--sans); }   /* the learner's own earlier words, on the reference side */
+  #ctxbox .rtext { max-width: 62ch; margin: 0 auto; padding-left: 40px; }   /* same left edge as a numbered text */
+  .answer { display: block; width: 100%; min-height: 124px; resize: vertical; background: var(--field); border: 1px solid var(--line-2); border-radius: 8px; padding: 12px 14px; outline: none; font: 15.5px/1.58 var(--sans);
+            transition: border-color var(--fast) ease, box-shadow var(--fast) ease, background-color .35s ease, color .35s ease, padding .35s var(--ease); }
+  .answer:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--mark); }
+  .answer:disabled { background: transparent; border-color: var(--line); color: var(--text-2); resize: none; }
+  .row { display: flex; align-items: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .btn { border: 0; border-radius: 8px; padding: 9px 16px; font: 600 14px/1.3 var(--sans); background: var(--text); color: var(--ground); white-space: nowrap;
+         transition: background-color var(--fast) ease, opacity var(--fast) ease, transform .12s var(--ease); }
+  .btn:hover:not(:disabled) { background: color-mix(in oklab, var(--text) 86%, var(--accent)); }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .btn:disabled { background: transparent; color: var(--text-3); box-shadow: inset 0 0 0 1px var(--line); cursor: default; }
+  .btn.ghost:disabled { opacity: .5; }
+  .btn.ghost { background: transparent; color: var(--text-2); box-shadow: inset 0 0 0 1px var(--line-2); font-weight: 500; }
+  .btn.ghost:hover:not(:disabled) { color: var(--text); background: var(--tint); }
+  .btn.warn { background: var(--amber); color: var(--amber-ink); }
+  .btn.warn:hover:not(:disabled) { background: color-mix(in oklab, var(--amber) 88%, #fff); }
+  .btn.sm { padding: 6px 12px; font-size: 13px; }
+  .btn.sent, .btn.sent:disabled { background: transparent; color: var(--good); box-shadow: none; padding-left: 2px; display: inline-flex; align-items: center; gap: 6px; }
+  .kbd { opacity: .55; font-size: 12px; font-weight: 500; margin-left: 4px; }
+  .thumbs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .thumb { position: relative; width: 60px; height: 60px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line-2); padding: 0; background: var(--field); animation: in .2s var(--ease); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb::after { content: ""; position: absolute; inset: 0; background: rgba(0, 0, 0, .5) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 4l8 8M12 4l-8 8' stroke='%23fff' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center / 18px no-repeat; opacity: 0; transition: opacity var(--fast) ease; }
+  .thumb:hover::after, .thumb:focus-visible::after { opacity: 1; }
+  .thumb:disabled::after { display: none; }
+  .pbody.drag .answer { border-color: var(--accent); box-shadow: 0 0 0 3px var(--mark); }
+  .tail { margin-left: 0; }
+
+  /* the page: a text with numbered lines, the tutor's marks, footnotes */
+  .poem { margin: 0 auto; max-width: 62ch; font: 17.5px/1.74 var(--serif); color: var(--text); }
+  .poem cite, .rtext cite { display: block; font: 12.5px/1.45 var(--sans); font-style: normal; color: var(--text-3); margin: 0 0 22px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+  .poem cite { margin-left: 40px; }
+  /* the two pins of a task, top left on every card of it: the question being answered, then what the learner has written for it so far.
+     Quieter than the card's own text below them. Nothing else from earlier in the block is kept on this side. */
+  .pin { max-width: 720px; margin: 0 auto; } .pin + .pin { margin-top: 20px; }
+  .pinl { font: 600 11px/1.6 var(--sans); letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); margin-bottom: 5px; }
+  .pin .pb { font: 16px/1.62 var(--serif); color: var(--text); overflow-wrap: anywhere; } .pin .pb p { margin: 0 0 .55em; } .pin .pb p:last-child { margin-bottom: 0; }
+  .pin.mine .pb { font: 15.5px/1.6 var(--sans); }
+  .pin .wl { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; } .pin .wl + .wl { margin-top: .4em; }
+  .pin .wl i { font: 500 11px/2.3 var(--sans); font-style: normal; color: var(--text-3); text-align: right; }
+  .pin.cut .pb { max-height: 6.5em; overflow: hidden; -webkit-mask-image: linear-gradient(#000 68%, transparent); mask-image: linear-gradient(#000 68%, transparent); }
+  .pin.mine.cut .pb { max-height: 8em; }
+  .pin .more { display: none; margin-top: 5px; border: 0; background: none; padding: 2px 0; font: 500 12.5px/1.4 var(--sans); color: var(--text-2); text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; cursor: pointer; }
+  .pin.long .more { display: inline-block; } .pin .more:hover { color: var(--text); }
+  .poem cite, .rtext cite { margin-bottom: 14px; padding-bottom: 9px; }
+  .sep .visual.bleed { margin-top: 0; }
+  .ln { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 14px; transition: background-color .4s ease, box-shadow .4s ease; }
+  .ln .n { color: var(--text-3); font: 11px/2.77 var(--sans); text-align: right; user-select: none; opacity: .75; }
+  .ln .t { white-space: pre-wrap; text-wrap: pretty; min-height: .9em; }
+  .ln.brk .n { visibility: hidden; } .ln.brk .t { min-height: .95em; }
+  .ln.mk { background: var(--mark); box-shadow: -6px 0 0 var(--mark), 8px 0 0 var(--mark); }
+  .ln.mk .n { color: var(--accent); opacity: 1; font-weight: 600; }
+  mark { background: var(--mark); color: inherit; border-radius: 2px; }
+
+  /* canvas */
+  .cv-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 28px; margin-bottom: 16px; }
+  .prompt { font: 17px/1.58 var(--serif); margin: 0; text-wrap: pretty; }
+  .count { text-align: right; flex: none; min-width: 96px; }
+  .count .t { font: 600 30px/1.1 var(--sans); letter-spacing: .01em; transition: color .3s ease; }
+  .count.low .t { color: var(--warn-text); }
+  .count.over .t { font-size: 14px; font-weight: 500; color: var(--text-3); padding-top: 8px; }
+  .claim { width: 100%; background: var(--field); border: 1px solid var(--line-2); border-radius: 8px; padding: 10px 14px; outline: none; resize: none; overflow: hidden; font: 15.5px/1.5 var(--sans); display: block;
+           transition: border-color var(--fast) ease, box-shadow var(--fast) ease, background-color .35s ease; }
+  .claim:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--mark); }
+  .claim:read-only { background: transparent; border-color: var(--line); color: var(--text-2); box-shadow: none; }
+  .write { width: 100%; min-height: clamp(200px, calc(100dvh - 500px), 62vh); margin-top: 12px; resize: vertical; background: var(--field); color: var(--text); border: 1px solid var(--line-2); border-radius: 8px; padding: 22px 26px; outline: none;
+           font: 17.5px/1.78 var(--serif); animation: set .45s var(--ease); transition: border-color var(--fast) ease; }
+  .write:focus { border-color: color-mix(in oklab, var(--accent) 60%, var(--line-2)); }
+  .write:disabled { color: var(--text-2); background: transparent; border-color: var(--line); }
+  .foot { display: flex; align-items: center; gap: 14px; font-size: 13px; color: var(--text-3); margin-top: 12px; min-height: 34px; flex-wrap: wrap; }
+  .foot > span:first-child { white-space: nowrap; }
+  .sv { display: inline-flex; align-items: center; gap: 6px; transition: opacity .3s ease; }
+  .sv i { width: 6px; height: 6px; border-radius: 50%; background: var(--good); }
+  .confirm { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .confirm .q { color: var(--text); font-size: 14px; font-weight: 600; animation: in .18s var(--ease); }
+  .done { margin-left: auto; color: var(--good); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+  .notsent { color: var(--red); font-size: 13px; font-weight: 600; animation: in .18s var(--ease); }
+
+  /* mcq: a bubble sheet */
+  .mcq-top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+  .dots { display: flex; gap: 4px; flex-wrap: wrap; }
+  .dots button { min-width: 28px; height: 28px; border-radius: 6px; font: 600 12.5px/1 var(--sans); background: transparent; border: 1px solid transparent; color: var(--text-3); padding: 0 4px;
+                 transition: background-color var(--fast) ease, color var(--fast) ease, border-color var(--fast) ease, transform .12s var(--ease); }
+  .dots button:hover { background: var(--tint); } .dots button:active { transform: scale(.92); }
+  .dots button.has { color: var(--text); background: var(--tint); }
+  .dots button.ok { color: var(--good); } .dots button.miss { color: var(--red); background: color-mix(in srgb, var(--red) 12%, transparent); }
+  .dots button[aria-selected="true"] { border-color: var(--text); color: var(--text); }
+  .dots button.miss[aria-selected="true"] { border-color: var(--red); color: var(--red); } .dots button.ok[aria-selected="true"] { border-color: var(--good); color: var(--good); }
+  .tip { position: relative; width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--line-2); color: var(--text-3); background: transparent; padding: 0; display: grid; place-items: center; }
+  .tip::after { content: attr(data-tip); position: absolute; right: 0; top: calc(100% + 8px); transform: translateY(-4px); width: max-content; max-width: 240px; text-align: left;
+                background: var(--card); color: var(--text); border-radius: 6px; padding: 7px 10px; font: 400 12.5px/1.4 var(--sans); box-shadow: var(--lift);
+                opacity: 0; pointer-events: none; transition: opacity var(--fast) ease, transform var(--fast) ease; z-index: 9; }
+  .tip:hover::after, .tip:focus-visible::after { opacity: 1; transform: none; }
+  .timer { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); font: 600 14px/1 var(--sans); }
+  .timer.low { color: var(--warn-text); }
+  .mq { font-size: 19px; font-weight: 500; }
+  .opts { display: grid; border-top: 1px solid var(--line); }
+  .opt { display: grid; grid-template-columns: 26px 1fr; gap: 14px; align-items: start; text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 13px 10px 13px 8px; font: 15.5px/1.5 var(--sans);
+         transition: background-color var(--fast) ease; }
+  .opt:hover:not(:disabled) { background: var(--tint); }
+  .opt .l { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--text-3); display: grid; place-items: center; font: 600 12px/1 var(--sans); color: var(--text-2); margin-top: -1px;
+            transition: background-color .2s var(--ease), border-color var(--fast) ease, color var(--fast) ease, transform .25s var(--ease); }
+  .opt:active:not(:disabled) .l { transform: scale(.9); }
+  .opt[aria-checked="true"] { background: var(--mark); }
+  .opt[aria-checked="true"] .l { background: var(--text); border-color: var(--text); color: var(--ground); }
+  .opt.is-right .l { background: var(--good); color: var(--good-ink); border-color: var(--good); }
+  .opt.is-wrong { background: color-mix(in srgb, var(--red) 10%, transparent); } .opt.is-wrong .l { background: var(--red); color: #fff; border-color: var(--red); }
+  .opt:disabled { cursor: default; }
+  .score { margin-top: 18px; font: 600 22px/1.2 var(--serif); animation: set .4s var(--ease); }
+
+  /* choice */
+  .readings { display: grid; margin: 0 0 12px; border-top: 1px solid var(--line); }
+  .reading { background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 13px 10px 14px 8px; text-align: left; display: grid; grid-template-columns: 26px 1fr; column-gap: 14px; row-gap: 2px; font: inherit; color: var(--text);
+             transition: background-color var(--fast) ease; }
+  div.reading { grid-template-columns: 1fr; padding-left: 0; }
+  .reading b { grid-column: 2; font: 600 13px/1.4 var(--sans); color: var(--text-2); transition: color var(--fast) ease; }
+  div.reading b { grid-column: 1; }
+  .reading .rt { grid-column: 2; font: 16.5px/1.55 var(--serif); text-wrap: pretty; } div.reading .rt { grid-column: 1; }
+  button.reading::before { content: ""; grid-row: 1 / span 2; width: 20px; height: 20px; margin-top: 1px; border-radius: 50%; border: 1.5px solid var(--text-3); transition: border-color var(--fast) ease, background-color .2s var(--ease), box-shadow .2s var(--ease); }
+  button.reading[aria-checked="true"]::before { border-color: var(--text); background: var(--text); box-shadow: inset 0 0 0 4px var(--ground); }
+  button.reading:hover:not(:disabled) { background: var(--tint); }
+  .reading[aria-checked="true"] { background: var(--mark); } .reading[aria-checked="true"] b { color: var(--text); }
+  .reading:disabled { cursor: default; } .reading:disabled:not([aria-checked="true"]) { opacity: .5; }
+  .choices { display: grid; border-top: 1px solid var(--line); margin-top: 4px; }
+  .choice { display: grid; grid-template-columns: 26px 1fr; gap: 14px; align-items: center; text-align: left; border: 0; border-bottom: 1px solid var(--line); background: transparent; border-radius: 0; padding: 12px 10px 12px 8px; font: 500 15.5px/1.45 var(--sans);
+            transition: background-color var(--fast) ease, opacity var(--fast) ease; }
+  .choice::before { content: ""; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--text-3); transition: border-color var(--fast) ease, background-color .2s var(--ease), box-shadow .2s var(--ease); }
+  .choice:hover:not(:disabled) { background: var(--tint); }
+  .choice[aria-checked="true"] { background: var(--mark); }
+  .choice[aria-checked="true"]::before { border-color: var(--text); background: var(--text); box-shadow: inset 0 0 0 4px var(--ground); }
+  .choice:disabled { cursor: default; } .choice:disabled:not([aria-checked="true"]) { opacity: .45; }
+  .field-label { font-size: 13px; color: var(--text-2); display: block; margin: 16px 0 6px; }
+
+  /* no card up: the contents page. Subjects are volumes; one opens into its gaps and units. */
+  .contents { margin: 6px 0 0 var(--gut); }
+  .vols { display: grid; border-top: 1px solid var(--line-2); }
+  .sub { --c: var(--subject); display: grid; grid-template-columns: 12px minmax(0, 1fr) auto 16px; align-items: center; gap: 14px; padding: 15px 6px 15px 2px; border: 0; border-bottom: 1px solid var(--line); background: transparent; text-align: left;
+         transition: background-color var(--fast) ease, padding .3s var(--ease); }
+  .sub i { width: 12px; height: 22px; border-radius: 2px; background: color-mix(in oklab, var(--c) 70%, var(--text) 8%); }
+  .sub span { font: 500 19px/1.3 var(--serif); letter-spacing: -.005em; }
+  .sub small { font: 500 12.5px/1 var(--sans); color: var(--text-3); }
+  .sub svg { color: var(--text-3); transition: transform .3s var(--ease), color var(--fast) ease; }
+  .sub:hover { background: var(--tint); padding-left: 8px; } .sub:hover svg { color: var(--text); }
+  .sub[aria-expanded="true"] svg { transform: rotate(90deg); color: var(--text); }
+  .plan { padding: 16px 0 22px 26px; display: grid; gap: 16px; border-bottom: 1px solid var(--line); animation: set .4s var(--ease); }
+  .plan a:not(.btn) { justify-self: start; color: var(--text-2); font-size: 13px; text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; transition: color var(--fast) ease, text-decoration-color var(--fast) ease; }
+  .plan a:not(.btn):hover { color: var(--text); text-decoration-color: var(--text-3); }
+  .units { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 6px; }
+  .unit { text-align: left; background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; display: grid; gap: 7px; transition: border-color var(--fast) ease, background-color var(--fast) ease; }
+  .unit:hover { border-color: var(--line-2); background: var(--tint); }
+  .unit[aria-pressed="true"] { border-color: var(--text); background: var(--mark); }
+  .unit b { font-weight: 600; font-size: 13.5px; display: flex; justify-content: space-between; gap: 8px; }
+  .unit b small { color: var(--text-3); font-weight: 500; font-size: 12px; white-space: nowrap; }
+  .pips { display: flex; gap: 5px; flex-wrap: wrap; }
+  .pips i { width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--line-2); background: transparent; }
+  .pips i.seen { background: var(--line-2); border-color: transparent; }
+  .pips i.tested { background: color-mix(in oklab, var(--c, var(--subject)) 75%, var(--text)); border-color: transparent; }
+  .pips i.shown { background: var(--good); border-color: transparent; }
+  .pips i.due { box-shadow: 0 0 0 1px var(--ground), 0 0 0 2px color-mix(in srgb, var(--amber) 70%, transparent); }
+  .go-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: start; }
+  .go-row .answer { min-height: 42px; padding: 9px 12px; }
+  .gaps { display: grid; }
+  .gap { font: 14px/1.45 var(--sans); color: var(--text-2); display: grid; grid-template-columns: 8px 1fr; gap: 10px; align-items: baseline; text-align: left; background: none; border: 0; padding: 5px 8px 5px 0; border-radius: 6px; transition: color var(--fast) ease, background-color var(--fast) ease; }
+  .gap:hover { color: var(--text); background: var(--tint); }
+  .gap em { width: 6px; height: 6px; border-radius: 50%; background: transparent; transform: translateY(-2px); }
+  .gap em.due { background: var(--amber); }
+  .gap[aria-pressed="true"] { color: var(--text); background: var(--mark); }
+  .opening { display: flex; align-items: center; gap: 14px; color: var(--text-2); padding: 4px 0 0; }
+  a.btn { display: inline-block; text-decoration: none; }
+  .waitrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .blockover { display: inline-flex; align-items: center; gap: 8px; margin: 22px 0 18px var(--gut); color: var(--good); font: 600 13px/1 var(--sans); }
+
+  /* lesson: numbered steps here, the picture on the page */
+  /* the lesson's steps as a numbered stepper: done steps in ink, the one in play filled in the subject's accent, the rest faint.
+     Each number is a button back to that step. */
+  .segs { display: flex; align-items: center; gap: 6px; margin: 0 0 20px; counter-reset: seg; }
+  .segs button { counter-increment: seg; flex: 1; min-width: 0; height: 30px; padding: 0; border: 0; background: none; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 6px; }
+  .segs button:last-child { flex: 0 0 auto; grid-template-columns: auto; }
+  .segs button::before { content: counter(seg); width: 26px; height: 26px; border-radius: 50%; box-sizing: border-box; display: grid; place-items: center; font: 600 12px/1 var(--sans);
+                         border: 1.5px solid var(--line-2); color: var(--text-3); background: transparent;
+                         transition: background-color .25s ease, border-color .25s ease, color .25s ease, transform .2s var(--ease); }
+  .segs i { display: block; height: 3px; border-radius: 2px; background: var(--line-2); transition: background-color .3s ease; }
+  .segs button:last-child i { display: none; }
+  .segs button.seen::before { border-color: var(--text-2); color: var(--text); }
+  .segs button.seen i { background: var(--text-3); }
+  .segs button[aria-selected="true"]::before { background: var(--accent); border-color: var(--accent); color: var(--leaf); transform: scale(1.08); }
+  .segs button:hover:not(:disabled):not([aria-selected="true"])::before { background: var(--tint); border-color: var(--text); }
+  .segs button:disabled { cursor: default; opacity: .7; }
+  .steps { list-style: none; margin: 0 -12px; padding: 0; display: grid; gap: 2px; counter-reset: step; }
+  .step { position: relative; font: 17px/1.62 var(--serif); padding: 4px 12px 6px; border-radius: 8px; text-wrap: pretty; color: var(--text-3); will-change: opacity, transform;
+          transition: color .35s ease, background-color .35s ease; }
+
+  .step:not(.now) { display: none; }   /* one step at a time, so the lesson fits the window; the bar above and Back reach the others */
+  /* the step in play: full ink on a band of the subject's tint, its number in the accent; everything else steps back */
+  .step.now { color: var(--text); }
+  .lnav { margin-top: 16px; }
+  .lcount { margin-left: auto; color: var(--text-3); font-size: 13px; }
+  .lcheck, .rask { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--line); animation: set .45s var(--ease); }
+  .lcheck h2, .rask h2 { font-size: 19px; margin-bottom: 14px; }
+  .row.rask { border-top: 0; padding-top: 0; margin-top: 6px; }
+  .visual { margin: 0 auto; max-width: 720px; --field: var(--leaf); } .visual.wide { max-width: 980px; }
+  .vis.swap { animation: set .45s var(--ease); }
+  .visual .poem { max-width: none; }
+  .gsvg { display: block; width: 100%; height: auto; overflow: visible; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+  .gsvg.drag { cursor: ew-resize; }
+  .g-grid { stroke: var(--line); stroke-width: 1; }
+  .g-axis { stroke: var(--line-2); stroke-width: 1.25; }
+  .g-tick { fill: var(--text-3); font: 11px var(--sans); font-variant-numeric: tabular-nums; }
+  .g-lab { fill: var(--text-2); font: 500 12px var(--sans); }
+  .g-curve { fill: none; stroke: var(--c); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .g-curve.dash { stroke-dasharray: 6 5; stroke-width: 2; }
+  .g-curve.draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .9s var(--ease) forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .g-shade { fill: var(--c); opacity: .22; }
+  .g-ref { stroke: var(--text-3); stroke-width: 1.2; stroke-dasharray: 3 4; }
+  .g-line { stroke: var(--c); stroke-width: 1.6; }
+  .g-dot { fill: var(--c); stroke: var(--field); stroke-width: 2.5; }
+  .g-name { fill: var(--c); font: 600 12.5px var(--sans); paint-order: stroke; stroke: var(--field); stroke-width: 4px; stroke-linejoin: round; }
+  .g-guide { stroke: var(--accent); stroke-width: 1; opacity: .4; }
+  .g-knob { fill: var(--accent); stroke: var(--field); stroke-width: 3; }
+  .n-line { stroke: var(--text-2); stroke-width: 1.5; }
+  .n-move { fill: none; stroke: var(--c); stroke-width: 2; stroke-linecap: round; }
+  .n-head { fill: var(--c); }
+  .n-band { fill: var(--c); opacity: .45; }
+  .n-open { fill: var(--field); stroke: var(--c); stroke-width: 2; }
+  .fade { animation: fade .5s ease both; }
+  @keyframes fade { from { opacity: 0; } }
+  .gctl { display: grid; gap: 14px; margin-top: 12px; }
+  .slide { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 14px; font-size: 14px; color: var(--text-2); padding: 0 4px; }
+  .slide b { color: var(--text); font-weight: 600; display: inline-block; min-width: 4.5ch; }
+  .slide input { -webkit-appearance: none; appearance: none; width: 100%; height: 24px; margin: 0; background: transparent; --p: 50%; }
+  .slide input::-webkit-slider-runnable-track { height: 3px; border-radius: 2px; background: linear-gradient(to right, var(--text) var(--p), var(--line-2) var(--p)); }
+  .slide input::-moz-range-track { height: 3px; border-radius: 2px; background: linear-gradient(to right, var(--text) var(--p), var(--line-2) var(--p)); }
+  .slide input::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -7.5px; border-radius: 50%; background: var(--text); border: 3px solid var(--leaf); box-shadow: 0 0 0 1px var(--text-3); transition: transform .15s var(--ease); }
+  .slide input::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--text); border: 3px solid var(--leaf); box-shadow: 0 0 0 1px var(--text-3); }
+  .slide input:active::-webkit-slider-thumb { transform: scale(1.15); }
+  .readouts { display: flex; flex-wrap: wrap; gap: 0; border-top: 1px solid var(--line); }
+  .ro { padding: 10px 22px 2px 0; margin-right: 22px; display: grid; gap: 2px; min-width: 96px; }
+  .ro small { font-size: 12.5px; color: var(--text-3); }
+  .ro b { font: 600 20px/1.2 var(--sans); letter-spacing: .01em; }
+  .ltable { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .ltable th { text-align: left; font-weight: 600; color: var(--text-2); font-size: 13px; padding: 8px 12px; border-bottom: 1px solid var(--line-2); }
+  .ltable td { padding: 9px 12px; border-bottom: 1px solid var(--line); }
+  .ltable tr:last-child td { border-bottom: 0; }
+  .ltable tr.hl td { background: var(--mark); }
+  .flow { list-style: none; margin: 0 auto; padding: 2px 4px; display: grid; gap: 18px; max-width: 420px; }
+  .flow li { position: relative; border: 1px solid var(--line-2); border-radius: 8px; padding: 7px 14px; font-size: 14.5px; font-weight: 500; line-height: 1.4; transition: border-color .3s ease, background-color .3s ease; }
+  .flow li:not(:last-child)::after { content: ""; position: absolute; left: 50%; bottom: -14px; width: 1.5px; height: 9px; background: var(--text-3); }
+  .flow li:not(:last-child)::before { content: ""; position: absolute; left: calc(50% - 3.5px); bottom: -16px; border: 4px solid transparent; border-top: 5px solid var(--text-3); border-bottom: 0; }
+  .flow li { color: var(--text-2); } .flow li.past { color: var(--text-3); border-color: var(--line); }
+  .flow li.on { border-color: var(--text); background: var(--mark); color: var(--text); font-weight: 600; box-shadow: 0 0 0 1px var(--text); }
+  .visual.bleed { max-width: none; margin: -34px calc(-1 * clamp(22px, 3.6vw, 52px)) 0; }
+  .mfig { display: block; width: 100%; aspect-ratio: 4 / 3; border: 0; background: transparent; }
+  /* A picture or a PDF on the page: one resource card, laid out after AssessPrep's (title, a tab per file, Full screen, a framed
+     viewer under its own dark bar). The handling is ours: see resPane. */
+  .res { max-width: 980px; margin: 0 auto; }
+  .rest { font: 600 15px/1.4 var(--sans); margin: 0 0 6px; color: var(--text); text-wrap: balance; }
+  .resbar { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 8px; }
+  .restabs { display: flex; gap: 4px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  .restabs button { flex: none; padding: 5px 9px 6px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--text-3); font: 500 13.5px/1.4 var(--sans); cursor: pointer; white-space: nowrap; transition: color var(--fast) ease, border-color var(--fast) ease; }
+  .restabs button:hover { color: var(--text); } .restabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--text); }
+  .resfs { flex: none; display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px 0 10px; border-radius: 8px; border: 1px solid var(--line-2); background: var(--leaf); color: var(--text); font: 500 13.5px var(--sans); cursor: pointer; transition: background-color var(--fast) ease; }
+  .resfs:hover { background: var(--mark); } .resfs svg { width: 15px; height: 15px; }
+  .resv { display: flex; flex-direction: column; height: clamp(340px, calc(100dvh - var(--bar-h) - 190px), 920px); border: 1px solid var(--line-2); border-radius: 8px; overflow: hidden; background: #2a2a2e; outline: 0; }
+  .leaf .resv { height: var(--res-h, clamp(300px, calc(100dvh - var(--bar-h) - 176px), 920px)); }   /* fitRes: exactly the room left under the pins and the context */
+  .resv:focus-visible { box-shadow: 0 0 0 3px var(--mark); }
+  .restool { flex: none; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 34px; padding: 0 6px; background: #38383d; color: #f4f4f5; font: 13px/1 var(--sans); font-variant-numeric: tabular-nums; user-select: none; -webkit-user-select: none; }
+  .restool.off { display: none; }
+  .rg { display: flex; align-items: center; gap: 2px; min-width: 0; }
+  .restool button { width: 28px; height: 26px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 5px; background: none; color: inherit; cursor: pointer; transition: background-color .12s ease; }
+  .restool button:hover { background: rgba(255, 255, 255, .14); } .restool button:active { background: rgba(255, 255, 255, .24); }
+  .restool button:disabled { opacity: .35; cursor: default; background: none; }
+  .restool svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .rpn { width: 42px; height: 24px; box-sizing: border-box; margin-left: 6px; padding: 0 6px; text-align: right; border-radius: 4px; border: 1px solid rgba(255, 255, 255, .2); background: #4a4a4f; color: inherit; font: inherit; }
+  .rpn:focus { outline: 0; border-color: #9ec1ff; }
+  .rpt { margin-left: 6px; color: #c9c9cf; white-space: nowrap; }
+  .rzs { height: 24px; margin: 0 4px; padding: 0 4px; border-radius: 4px; border: 0; background: #4a4a4f; color: inherit; font: inherit; cursor: pointer; }
+  .resport { position: relative; flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .32) transparent; cursor: grab; touch-action: pan-x pan-y; }
+  .resport.grab { cursor: grabbing; }
+  .resstage { --z: 1; --bw: 600px; display: flex; flex-direction: column; align-items: center; gap: 10px; box-sizing: border-box; width: max-content; min-width: 100%; min-height: 100%; padding: 12px; }
+  .resstage.one { justify-content: center; }
+  .respg { flex: none; position: relative; width: calc(var(--bw) * var(--z)); background: #fff; box-shadow: 0 1px 5px rgba(0, 0, 0, .45); overflow: hidden; }
+  .respg canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  img.respg { display: block; height: auto; user-select: none; -webkit-user-select: none; -webkit-user-drag: none; }
+  .resv.wait .resstage::before { content: ""; width: var(--bw); max-width: 100%; aspect-ratio: 4 / 3; border-radius: 2px; background: rgba(255, 255, 255, .07) linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, .1) 50%, transparent 65%) 120% 0 / 250% 100% no-repeat; animation: resshim 1.6s linear infinite; }
+  @keyframes resshim { from { background-position: 120% 0; } to { background-position: -60% 0; } }
+  .respdf { flex: 1; width: 100%; border: 0; background: #fff; }
+  .resmiss { margin: auto; padding: 24px; color: #c9c9cf; font: 13.5px/1.5 var(--sans); text-align: center; }
+  dialog.resdlg { box-sizing: border-box; width: calc(100vw - 48px); height: calc(100dvh - 48px); max-width: none; max-height: none; margin: auto; padding: 46px 10px 10px; border: 1px solid var(--line-2); border-radius: 12px; background: var(--leaf); color: var(--text); overflow: hidden; }
+  dialog.resdlg[open] { display: flex; flex-direction: column; }
+  dialog.resdlg::backdrop { background: rgba(0, 0, 0, .52); }
+  dialog.resdlg .resv { flex: 1; height: auto; min-height: 0; }
+  .resx { position: absolute; top: 8px; right: 10px; width: 32px; height: 30px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--text-2); cursor: pointer; }
+  .resx:hover { background: var(--mark); color: var(--text); } .resx svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+  @media (prefers-reduced-motion: reduce) { .resv.wait .resstage::before { animation: none; } }
+  .mvid { display: block; width: 100%; max-height: calc(100dvh - var(--bar-h)); background: #000; }
+  .vmiss { color: var(--text-3); font-size: 13px; padding: 34px clamp(22px, 3.6vw, 52px); margin: 0; }
+
+  /* review: the learner's own writing on the page, the tutor's notes in its margin */
+  .rv { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 15rem); gap: 30px; align-items: start; max-width: 880px; margin: 0 auto; }
+  .rtitle { font: 600 21px/1.35 var(--serif); margin: 0 0 18px; text-wrap: balance; }
+  .rtext { font: 17.5px/1.78 var(--serif); color: var(--text); max-width: 64ch; }
+  .rtext p { margin: 0 0 1em; white-space: pre-line; text-wrap: pretty; }
+  .rtext p:last-child { margin-bottom: 0; }
+  .rnotes, .pnotes { list-style: none; margin: 0; padding: 0; }
+  .rnotes { position: relative; }
+  .rnotes li { position: absolute; left: 0; right: 0; transition: top .3s var(--ease); }
+  .rnotes li, .pnotes li { --tone: var(--accent); display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 8px; font: 13.5px/1.5 var(--sans); color: var(--text-2); padding: 5px 8px 6px 6px; border-radius: 6px;
+                           transition: background-color var(--fast) ease, color var(--fast) ease, top .3s var(--ease); cursor: default; }
+  .rnotes li b, .pnotes li b { font: 600 11.5px/1.76 var(--sans); color: var(--tone); text-align: right; }
+  .pnotes { display: grid; gap: 4px; margin: 26px 0 0 34px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .pnotes:empty, .rnotes:empty { display: none; }
+  mark.nt { --tone: var(--accent); background: color-mix(in srgb, var(--tone) 22%, transparent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--tone) 22%, transparent);
+            color: inherit; border-radius: 2px; transition: background-color var(--fast) ease, box-shadow var(--fast) ease; }
+  .nb { --tone: var(--accent); font: 600 10.5px/1 var(--sans); color: var(--tone); vertical-align: super; margin: 0 1px 0 3px; user-select: none; }
+  .t-amber { --tone: var(--amber) !important; } .t-good { --tone: var(--good) !important; } .t-red { --tone: var(--red) !important; }
+  [data-theme="light"] .t-amber { --tone: #b07a00 !important; }
+  mark.nt.on { background: color-mix(in srgb, var(--tone) 42%, transparent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--tone) 42%, transparent); }
+  .rnotes li.on, .pnotes li.on { background: color-mix(in srgb, var(--tone) 12%, transparent); color: var(--text); }
+  mark.nt.new { animation: ping 1.1s var(--ease) 2; }
+  .rnotes li.new, .pnotes li.new { animation: set .45s var(--ease); }
+  @keyframes ping { 0% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--tone) 22%, transparent), 0 0 0 2px color-mix(in srgb, var(--tone) 55%, transparent); }
+                    100% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--tone) 22%, transparent), 0 0 0 11px transparent; } }
+  @container leaf (max-width: 560px) {
+    .rv { grid-template-columns: minmax(0, 1fr); gap: 0; } .rnotes { display: grid; gap: 4px; min-height: 0 !important; margin-top: 26px; padding-top: 14px; border-top: 1px solid var(--line); }
+    .rnotes li { position: static; }
+  }
+
+  @container talk (max-width: 470px) { .cv-head { flex-direction: column; gap: 10px; } .count { text-align: left; } .pbody { padding: 20px 16px 18px; } .phead { padding: 9px 16px; } }
+  /* a narrow window (the room beside the chat): the page stacks on top and stays in view */
+  @media (max-width: 860px) {
+    .desk.has-src, .desk.has-src.swap { grid-template-columns: minmax(0, 1fr); } .split { display: none; }
+    .leaf, .desk.swap .leaf { order: -1; border-left: 0; }
+    #pins:not(:empty) { position: static; margin: 0; padding: 0 0 14px; max-height: none; overflow: visible; }
+    .leaf { height: auto; max-height: 42dvh; border-right: 0; border-bottom: 1px solid var(--line-2); padding: 20px 18px 28px; z-index: 3; box-shadow: 0 12px 24px -18px rgba(0, 0, 0, .5); }
+    .desk[data-src="vis"] .leaf, .desk[data-src="figure"] .leaf, .desk[data-src="image"] .leaf, .desk[data-src="video"] .leaf, .desk[data-src="pdf"] .leaf, .desk[data-src="resources"] .leaf { max-height: 56dvh; }
+    .leaf .resv { height: 38dvh; }
+    .visual.bleed { margin: -20px -18px 0; }
+    .poem { font-size: 16.5px; } .rtext { font-size: 16.5px; } .poem cite { margin-left: 0; }
+    .talk { padding: 22px 18px 72px; }
+    .vol span { display: none; } .ic.txt span { display: none; } .ic.txt { padding: 0; width: 30px; justify-content: center; }
+    textarea, input { font-size: 16px; }
+  }
+  @media (max-width: 520px) { .bar { padding-left: 14px; gap: 8px; } }
+  @media (hover: none) { .kbd { display: none; } .thumb::after { opacity: .9; background-position: right 4px top 4px; background-size: 14px; } }
+  .theming, .theming *, .theming *::before, .theming *::after { transition: none !important; }
+  html.theming::view-transition-group(*), html.theming::view-transition-old(*), html.theming::view-transition-new(*) { animation-duration: .32s !important; animation-timing-function: ease !important; animation-delay: 0s !important; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .22s; }
+  ::view-transition-group(leaf) { animation-duration: .4s; animation-timing-function: var(--ease); }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    .caret { animation: none !important; }
+  }
+  .tip { font: italic 600 12px/1 var(--serif); }
+
+</style>
+</head>
+<body>
+  <header class="bar">
+    <div class="vol"><b id="subj">Study Room</b><span id="slot"></span></div>
+    <div class="clock" id="left" role="timer" aria-label="Time left in block">–:––</div>
+    <div class="bar-end">
+      <div class="item"><span class="t" id="itemT"></span><span class="n" id="itemN"></span><span class="must" id="must" hidden>must finish</span></div>
+      <button class="ic txt" id="histBtn" type="button" aria-pressed="false" aria-controls="thread" title="History" hidden><svg width="16" height="16" viewBox="0 0 18 18" aria-hidden="true"><path d="M3.2 9a5.8 5.8 0 1 0 1.7-4.1M3 3v2.9h2.9M9 5.6V9l2.3 1.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>History</span></button>
+      <button class="ic" id="leafBtn" type="button" aria-pressed="true" aria-controls="leaf" aria-label="Reference" title="Reference" hidden><svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"><path d="M9 4.6C7.6 3.6 5.6 3.2 2.8 3.4v9.9c2.8-.2 4.8.2 6.2 1.2 1.4-1 3.4-1.4 6.2-1.2V3.4C12.4 3.2 10.4 3.6 9 4.6Zm0 0v9.9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button>
+      <button class="ic" id="theme" type="button"></button>
+    </div>
+    <div class="prog" aria-hidden="true"><i id="bar"></i></div>
+  </header>
+
+  <div class="desk" id="desk">
+    <aside class="leaf" id="leaf" aria-label="Reference"><div id="pins"></div><div id="ctxbox"></div><div id="source"></div></aside>
+    <div class="split" id="split" role="separator" aria-orientation="vertical" aria-label="Resize the two sides" tabindex="0"><button class="swapb" id="swapBtn" type="button" aria-label="Swap sides" title="Swap sides"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 5.5h10M10 3l2.5 2.5L10 8M13.5 10.5h-10M6 8l-2.5 2.5L6 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+    <main class="talk" id="main"><div class="talk-in">
+      <div class="earlier" id="earlier" hidden><button type="button" id="oldBtn" aria-expanded="false" aria-controls="thread"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M3.5 1.5 7 5 3.5 8.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Earlier</span></button></div>
+      <ol class="thread" id="old" aria-label="Earlier tonight" hidden></ol>
+      <ol class="thread" id="thread" role="log" aria-label="This block"></ol>
+      <div id="cardArea"></div>
+      <div class="askline" id="askLine" hidden><button class="askb" id="askBtn" type="button" aria-expanded="false" aria-controls="askRow"><svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 6.1a2.6 2.6 0 1 1 3.8 2.3c-.8.4-1.3 1-1.3 1.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="8" cy="12.7" r="1" fill="currentColor"/></svg><span>Ask the tutor</span></button>
+        <form class="askrow" id="askRow" hidden><textarea class="answer" id="askText" rows="1" aria-label="Your question to the tutor"></textarea><button class="btn sm" type="submit">Ask <span class="kbd">↩</span></button></form></div>
+      <ol class="thread tail" id="tail" aria-live="polite"></ol>
+    </div></main>
+  </div>
+  <input type="file" id="file" accept="image/*" multiple hidden>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+// Light inline formatting for tutor text: **bold**, *italic*, line breaks. Math ($…$) is left for KaTeX.
+const fmt = t => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(^|[^*])\*(?!\s)(.+?)\*(?!\*)/g, '$1<i>$2</i>').replace(/\n/g, '<br>');
+// Math ($…$, $$…$$, \(…\)) is set aside, the rest formatted, then the math put back for KaTeX: so **bold with $x$ inside** still works.
+const rich = s => { const keep = [];
+  const t = String(s ?? '').replace(/\u0000/g, '').replace(/\$\$[\s\S]+?\$\$|\$[^$\n]+?\$|\\\([\s\S]+?\\\)/g, m => { keep.push(m); return `\u0000${keep.length - 1}\u0000`; });
+  return fmt(t).replace(/\u0000(\d+)\u0000/g, (_, i) => esc(keep[+i])); };
+const mmss = s => `${Math.floor(s / 60)}:${String(Math.max(0, s) % 60).padStart(2, '0')}`;
+const L = 'ABCDE';
+const CHECK = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+const store = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
+
+// Every subject has its own room, so two tutors open at once never share a page. A tab opened at /room/<subject> is that
+// room; one opened at plain /room takes the room in use and then keeps its address.
+let RID = (location.pathname.match(/^\/room\/([\w-]+)/) || [])[1] || null;
+async function api(path, body) {
+  const own = RID && !path.startsWith('..');
+  if (own && body) body = { ...body, room: RID };
+  const r = await fetch('/api/room/' + path + (own && !body ? '?room=' + RID : ''), body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : { cache: 'no-store' });
+  if (r.status >= 500) throw new Error('server ' + r.status);
+  return r.json();
+}
+// After a failed send: "Not sent" beside the button, focus on it, and the label says what pressing it does.
+function notSent(btn, label) {
+  if (!btn) return;
+  btn.disabled = false; btn.firstChild.textContent = label + ' ';
+  let tag = btn.parentElement.querySelector('.notsent');
+  if (!tag) { tag = document.createElement('span'); tag.className = 'notsent'; tag.setAttribute('role', 'alert'); btn.after(tag); }
+  tag.textContent = 'Not sent'; btn.focus();
+}
+// After a send went through: the button becomes a quiet "Sent" mark.
+function sentOK(btn) {
+  if (!btn) return;
+  const t = btn.parentElement.querySelector('.notsent'); if (t) t.remove();
+  btn.disabled = true; btn.classList.add('sent'); btn.innerHTML = CHECK + ' Sent';
+}
+// Hand an answer to the server. True when it's in (or already was); false means try again, nothing was lost.
+async function deliver(id, data) {
+  try { const r = await api('submit', { card: id, data }); return r.ok || /Already/.test(r.error || '') ? (r.result === undefined ? true : r) : false; }
+  catch (e) { return false; }
+}
+function math(el) {
+  if (window.renderMathInElement && el) try {
+    renderMathInElement(el, { delimiters: [{ left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false }, { left: '\\(', right: '\\)', display: false }], throwOnError: false, ignoredClasses: ['rtext'] });
+  } catch (e) {}
+}
+
+/* ---------- theme ---------- */
+const SUN = '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.5"/><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 1.2v1.6M8 13.2v1.6M1.2 8h1.6M13.2 8h1.6M3.2 3.2l1.1 1.1M11.7 11.7l1.1 1.1M3.2 12.8l1.1-1.1M11.7 4.3l1.1-1.1"/></g></svg>';
+const MOON = '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 9.6A5.8 5.8 0 0 1 6.4 2.5a5.8 5.8 0 1 0 7.1 7.1Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+function paintTheme() {
+  const dark = document.documentElement.dataset.theme !== 'light';
+  $('theme').innerHTML = dark ? SUN : MOON;
+  $('theme').setAttribute('aria-label', dark ? 'Switch to light' : 'Switch to dark');
+  $('theme').title = dark ? 'Light' : 'Dark';
+}
+// Light and dark change as one sheet. Every part has its own transition speed for its own state changes (a button .15s, a
+// ground .35s, a gradient none), so left alone they would arrive one after another: those are held off for the switch and the
+// whole page cross-fades once, where the browser can; otherwise it changes at once.
+$('theme').onclick = () => {
+  const root = document.documentElement, next = root.dataset.theme === 'light' ? 'dark' : 'light';
+  const done = () => setTimeout(() => root.classList.remove('theming'), 60);   // a timer, not a frame callback: a tab that isn't painting must still get its transitions back
+  root.classList.add('theming');
+  fadeSwap(() => { root.dataset.theme = next; store.set('room-theme', next); paintTheme(); document.dispatchEvent(new Event('roomtheme')); }).then(done);
+  setTimeout(done, 900);
+};
+// One cross-fade around a change, where the browser can. The change itself never waits on a frame that may not come.
+function fadeSwap(change) {
+  let did = false; const run = () => { if (did) return; did = true; change(); };
+  if (!document.startViewTransition || reduced.matches || document.visibilityState !== 'visible') { run(); return Promise.resolve(); }
+  try {
+    const vt = document.startViewTransition(run); [vt.ready, vt.updateCallbackDone].forEach(q => q.catch(() => {}));
+    setTimeout(run, 300); return vt.finished.catch(() => {});
+  } catch (e) { run(); return Promise.resolve(); }
+}
+paintTheme();
+
+/* ---------- state ---------- */
+let S = null, cardId = null, lastV = -1, skew = 0, swapping = false;
+let cardTimers = [], cleanups = [], srcCleanups = [];
+const every = (fn, ms) => { const id = setInterval(fn, ms); cardTimers.push(id); return id; };
+const clearCard = () => { cardTimers.forEach(clearInterval); cardTimers = []; cleanups.forEach(f => f()); cleanups = []; };
+const now = () => Date.now() / 1000 + skew;
+let H = {};   // per-card hooks: update(state) after a poll
+
+// A tab left open keeps the page code it was loaded with. So the page checks once a minute whether the file behind it has changed,
+// and if it has, reloads itself at a moment that costs nothing: between cards or while the tutor is reading, and never over typed text.
+const PAGE = { sig: null, stale: false };
+async function pageSig() { try { const r = await fetch(location.pathname, { cache: 'no-store' }); if (!r.ok) return null; const t = await r.text(); let h = 2166136261;
+  for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return t.length + ':' + (h >>> 0); } catch (e) { return null; } }
+pageSig().then(v => { PAGE.sig = v; });
+setInterval(async () => { const v = await pageSig(); if (v && PAGE.sig && v !== PAGE.sig) PAGE.stale = true; else if (v && !PAGE.sig) PAGE.sig = v; }, 60000);
+const typedSomething = () => [...document.querySelectorAll('textarea, input[type="text"], input:not([type])')].some(el => el.value.trim());
+const idleFor = s => (!s.card || s.submitted || s.card.id !== cardId) && !typedSomething() && !document.querySelector('dialog[open]');
+async function poll() {
+  try {
+    const s = await api('state');
+    if (PAGE.stale && idleFor(s)) { location.reload(); return; }
+    if (!RID && s.room) { RID = s.room; history.replaceState(null, '', '/room/' + RID + location.search); }
+    skew = s.now - Date.now() / 1000;
+    if (s.v !== lastV || !S) { lastV = s.v; apply(s); } else { S = s; }
+  } catch (e) {}
+  tickClock(); if (S) paintTail(S);
+}
+
+function apply(s) {
+  S = s;
+  if (!(LAUNCH.subject && !s.card)) setSubject(s.color);
+  $('subj').textContent = s.name || 'Study Room';
+  const b = s.block, who = s.subject && s.who && !String(s.name || '').toLowerCase().includes(String(s.who).toLowerCase()) ? s.who : '';
+  $('slot').textContent = [who, b && b.start ? `${b.start}–${b.end}` : ''].filter(Boolean).join(' · ');
+  const id = s.card ? s.card.id : (s.ended ? 'ended' : s.subject ? 'begun' : 'idle');
+  if (id !== cardId) { cardId = id; show(); } else {
+    paintThread(s, true); paintTail(s);
+    if (H.update) H.update(s);
+    const sig = s.card ? JSON.stringify(s.card.notes || []) : '', el = $('cardArea').querySelector('.card');
+    if (s.card && el && sig !== noteSig) {
+      const before = new Set(JSON.parse(noteSig || '[]').map(x => JSON.stringify(x)));
+      noteSig = sig; paintNotes(el, s.card, new Set((s.card.notes || []).map((x, i) => before.has(JSON.stringify(x)) ? -1 : i).filter(i => i >= 0)));
+    }
+  }
+  const c = s.card;
+  $('itemT').textContent = c ? (c.item || '') : ''; $('itemN').textContent = c && c.n ? c.n : '';
+  $('must').hidden = !(c && c.must);
+  document.title = s.name ? `${s.name} · Study Room` : 'Study Room';
+}
+// The subject binds the room: its colour is the spine and tints the ground; text set on it picks black or white.
+function setSubject(col) {
+  col = /^#[0-9a-f]{6}$/i.test(col || '') ? col : '#8e8e93'; const root = document.documentElement;
+  if (root.style.getPropertyValue('--subject') === col) return;
+  root.style.setProperty('--subject', col);
+  // The tab's icon is the room in miniature: the spine in the subject's colour, the page on the left, the talk on the right.
+  $('fav').href = 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#1b1a17"/><path d="M0 7a7 7 0 0 1 7-7h18a7 7 0 0 1 7 7v3H0z" fill="${col}"/><rect x="5" y="14" width="10" height="13" rx="1.5" fill="#f1ecdf"/><rect x="18.5" y="15" width="9" height="3" rx="1.5" fill="#f1ecdf" opacity=".6"/><rect x="18.5" y="21" width="6" height="3" rx="1.5" fill="#f1ecdf" opacity=".6"/></svg>`);
+  const [r, g, b2] = [1, 3, 5].map(k => parseInt(col.slice(k, k + 2), 16) / 255).map(v => v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4);
+  root.style.setProperty('--on-subject', .2126 * r + .7152 * g + .0722 * b2 > .4 ? '#0b0b0c' : '#ffffff');
+}
+
+function tickClock() {
+  const b = S && S.block, el = $('left'), bar = $('bar');
+  if (!b || !b.end) { el.textContent = '–:––'; bar.style.transform = 'scaleX(0)'; return; }
+  const [h, m] = b.end.split(':').map(Number), end = new Date(); end.setHours(h, m, 0, 0);
+  const [h0, m0] = (b.start || b.end).split(':').map(Number), start = new Date(); start.setHours(h0, m0, 0, 0);
+  const left = b.paused ? (b.left || 0) * 60 : Math.max(0, Math.round((end - Date.now()) / 1000));
+  el.textContent = mmss(left); el.classList.toggle('paused', !!b.paused);
+  const total = Math.max(1, (end - start) / 1000);
+  bar.style.transform = `scaleX(${Math.min(1, Math.max(0, 1 - left / total))})`;
+}
+
+/* ---------- writing in, rubbing out ---------- */
+// Text arrives the way it would be written: each line uncovered left to right, the top line first. It leaves the way it would be
+// rubbed out: the last line first, right to left. One clip-path polygon does both: everything above line i, and line i as far as x.
+// Nothing waits on any of it: the page is live and the fields take typing from the first frame.
+const EASE = 'cubic-bezier(.16, 1, .3, 1)';
+const still = () => reduced.matches || document.visibilityState !== 'visible';
+function lineFrames(el, lineH) {
+  const L = lineH || parseFloat(getComputedStyle(el).lineHeight) || 26, n = Math.max(1, Math.min(40, Math.round(el.offsetHeight / L))), f = [];
+  const P = (i, x) => { const a = (i * 100 / n).toFixed(2), b = ((i + 1) * 100 / n).toFixed(2); return `polygon(0% 0%, 100% 0%, 100% ${a}%, ${x}% ${a}%, ${x}% ${b}%, 0% ${b}%)`; };
+  for (let i = 0; i < n; i++) { f.push({ clipPath: P(i, 0), offset: i / n }); f.push({ clipPath: P(i, 100), offset: i === n - 1 ? 1 : (i + 1) / n - .0005 }); }
+  return { f, n };
+}
+// Returns when the writing ends (ms from now), so the next thing can follow it.
+function writeIn(el, delay = 0, o = {}) {
+  if (!el || still() || !el.offsetHeight) return delay;
+  const { f, n } = lineFrames(el, o.lineH), dur = Math.min(o.max || 640, Math.max(o.min || 240, n * (o.per || 110)));
+  el.animate(f, { duration: dur, delay, easing: 'linear', fill: 'backwards' });
+  return delay + dur;
+}
+// A lesson step fades in evenly: it rises a few pixels out of a slight blur over about half a second, so it reads as one soft
+// arrival instead of the line-by-line wipe the other text uses. Returns when it has settled (ms from now).
+function stepIn(el, delay = 0, dur = 480) {
+  if (!el || still()) return delay;
+  el.animate([{ opacity: 0, transform: 'translateY(8px)', filter: 'blur(2px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }],
+    { duration: dur, delay, easing: 'cubic-bezier(.25, .1, .25, 1)', fill: 'backwards' });
+  return delay + dur;
+}
+function riseIn(el, delay = 0, dur = 360) {
+  if (!el || still()) return;
+  el.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: dur, delay, easing: EASE, fill: 'backwards' });
+}
+function rubOut(el, dur = 220) {
+  if (!el || !el.offsetHeight) return;
+  const { f } = lineFrames(el, 30);
+  el.animate(f.slice().reverse().map(k => ({ clipPath: k.clipPath, offset: 1 - k.offset })), { duration: dur, easing: 'linear', fill: 'forwards' });
+}
+// What a render just put on the page is drawn in order: the page's lines, then the new lines of the exchange, then the card.
+function drawIn(freshSource) {
+  if (still()) return;
+  if (freshSource) {
+    const src = $('source'), lines = [...src.querySelectorAll('.ln')], paras = [...src.querySelectorAll('.rtext p')];
+    if (lines.length) { const step = Math.min(42, 640 / lines.length); lines.forEach((l, i) => writeIn(l, 60 + i * step, { per: 150, max: 460 })); riseIn(src.querySelector('cite'), 0, 300); }
+    else if (paras.length) { paras.forEach((p, i) => writeIn(p, 60 + Math.min(i, 8) * 110, { per: 70, max: 520 })); riseIn(src.querySelector('.rtitle'), 0, 300); riseIn(src.querySelector('cite'), 40, 300); }
+    else riseIn(src.firstElementChild, 0, 480);
+  }
+  let t = 0;
+  [...$('thread').querySelectorAll('.tn.new')].slice(-4).forEach(r => { if (r.matches('.tutor')) t = writeIn(r.querySelector('.sx'), t ? t - 140 : 60); else riseIn(r, 0, 300); });
+  const card = $('cardArea').firstElementChild; if (!card) return;
+  let d = t ? Math.min(t - 180, 480) : 60;
+  const body = card.querySelector(':scope > .pbody');
+  if (body) { riseIn(card, Math.max(0, d - 60), 320); riseIn($('askLine'), d + 260, 300); }
+  [...(body ? body.children : [card])].forEach(k => {
+    const text = k.matches('h2') ? k : k.querySelector(':scope > .prompt');
+    if (text) { d = Math.min(writeIn(text, d) - 120, d + 300); if (text !== k) riseIn(k.querySelector('.count'), d, 300); return; }
+    const many = k.matches('.opts, .choices, .readings, .steps') ? [...k.children] : k.querySelector(':scope > .vols') ? [...k.querySelectorAll(':scope > .vols > *')] : null;
+    if (many) { if (k.matches('.steps')) stepIn(k.querySelector('.step.now'), d); else many.forEach((x, i) => riseIn(x, d + i * 38, 320)); d += 80; }
+    else { riseIn(k, d, 340); d += 55; }
+  });
+}
+// A new card: the one in hand and the tutor's waiting lines are rubbed out, and the page too when its text is about to change;
+// then the new turn is drawn. The swap itself is one short beat, with a timer rather than an animation event behind it.
+function show() {
+  if (swapping) return;
+  const go = () => { swapping = false; try { render(true); } catch (e) { console.error(e); } };
+  const had = $('cardArea').firstElementChild;
+  if (!had || still()) return go();
+  swapping = true;
+  const outs = [had, $('tail').firstElementChild];
+  if (sourceSig(S.card) !== srcSig && $('desk').classList.contains('has-src')) outs.push($('source').firstElementChild);
+  outs.forEach(el => rubOut(el));
+  setTimeout(go, 230);
+}
+
+/* ---------- the transcript ---------- */
+// Everything said in this block stays on the page: the tutor's lines, each question once it has been answered, and the answers.
+// The card in hand is drawn below it by render(); history rows of kind "card" are past questions, "begin" marks where a block started.
+let threadSig = '', seenRows = null, histOpen = false;
+const ASK = { open: false };
+const lastName = who => who === 'You' ? 'You' : (String(who || '').replace(/^(Mr|Ms|Mrs|Dr)\.?\s+/, '').trim().split(/\s+/).pop() || 'Tutor');
+const isAsk = e => e.who === 'You' && /^\? /.test(e.text || '');
+const youHTML = t => { const m = /^Chose: ([^\n]*)(?:\n([\s\S]*))?$/.exec(t); return m ? `<b>${esc(m[1])}</b>${m[2] ? '\n' + esc(m[2]) : ''}` : esc(t); };
+function threadRows(s) {
+  const h = s.history || []; let start = 0;
+  h.forEach((e, i) => { if (e.kind === 'begin') start = i + 1; });
+  const live = s.card && s.card.id;
+  let cur = h.slice(start).filter(e => !(e.kind === 'card' && e.card === live));
+  // an answer just handed in is still on its card; it joins the transcript when the next card comes
+  if (s.card && s.submitted) { const i = cur.map(e => e.who === 'You' && !isAsk(e)).lastIndexOf(true); if (i >= 0) cur.splice(i, 1); }
+  return { old: h.slice(0, start).filter(e => e.kind !== 'begin'), cur };
+}
+function rowsHTML(rows, live) {
+  let prev = null; const lastTutor = live ? rows.map(e => e.who !== 'You' && e.kind !== 'card').lastIndexOf(true) : -1;
+  return rows.map((e, i) => {
+    const you = e.who === 'You', q = e.kind === 'card', ask = isAsk(e), who = q ? '' : lastName(e.who), same = !q && prev === who;
+    prev = q ? null : who;
+    const cls = ['tn', q ? 'q' : you ? 'you' : 'tutor', ask ? 'ask' : '', same ? 'same' : '', i === lastTutor ? 'now' : ''].filter(Boolean).join(' ');
+    return `<li class="${cls}"${e.t ? ` title="${esc(e.t)}"` : ''}><span class="sp">${same ? '' : esc(who)}</span><div class="sx">${you ? youHTML(ask ? e.text.slice(2) : e.text) : rich(e.text)}</div></li>`;
+  }).join('');
+}
+// The tutor at work: a skeleton of the lines to come beside their name. No caret here; the caret alone is the resting state.
+const caretRow = (s, label, n = 3) => `<li class="tn tutor pend"><span class="sp">${esc(lastName(s.who))}</span><div class="sx" role="status">${[96, 87, 92].slice(0, n - 1).map(w => `<span class="sk" style="--w:${w}%"></span>`).join('')}<span class="sk end" style="--w:${n > 2 ? 41 : 58}%"></span><span class="sr">${label}</span></div></li>`;
+const cardSkel = '<li class="tn skc" aria-hidden="true"><span class="sp"></span><div class="sx"><span class="sk h" style="--w:66%"></span><span class="skbox"></span></div></li>';
+const rowKey = e => [e.kind || '', e.who, e.t, e.text].join('|');
+function paintThread(s, soft) {
+  const { old, cur } = threadRows(s), canAsk = !!(s.card && !s.submitted && !s.asked);
+  const sig = JSON.stringify([cur.length, cur[cur.length - 1] || 0, old.length, !!s.asked, canAsk, s.card && s.card.id, histOpen]);
+  if (sig === threadSig) return;
+  threadSig = sig;
+  $('thread').innerHTML = rowsHTML(cur, true) + (s.asked ? caretRow(s, 'Reading your question', 2) : '');
+  math($('thread'));
+  const lis = [...$('thread').children], keys = cur.map(rowKey);
+  if (seenRows) keys.forEach((k, i) => { if (!seenRows.has(k) && lis[i]) lis[i].classList.add('new'); });
+  else { const el = $('thread').querySelector('.tn.now'); if (el) el.classList.add('new'); }   // first paint: only the line in play is written in
+  seenRows = new Set(keys);
+  // Only the turn in play shows: the answer just given (in brief) and what the tutor has said since. With no answer yet in the
+  // block, everything since the last question. The rest is folded behind History, one press away.
+  let y = -1; for (let i = cur.length - 1; i >= 0; i--) if (cur[i].who === 'You' && cur[i].kind !== 'card' && !isAsk(cur[i])) { y = i; break; }
+  let q = -1; for (let i = cur.length - 1; i >= 0; i--) if (cur[i].kind === 'card') { q = i; break; }
+  const from = Math.max(y, q + 1, 0);   // a question left unanswered since then starts the turn over
+  lis.forEach((li, i) => { if (i < from && i < cur.length) li.classList.add('fold'); });
+  if (y >= 0 && from === y && lis[y]) lis[y].classList.add('brief');
+  const hidden = from + old.length; if (!hidden) histOpen = false;
+  $('thread').classList.toggle('open', histOpen);
+  $('earlier').hidden = !hidden; $('oldBtn').setAttribute('aria-expanded', histOpen);
+  $('histBtn').hidden = !hidden; $('histBtn').setAttribute('aria-pressed', histOpen);
+  $('old').hidden = !(histOpen && old.length);
+  if (histOpen && old.length) { $('old').innerHTML = rowsHTML(old, false); math($('old')); }
+  $('askLine').hidden = !canAsk; if (!canAsk) setAsk(false);
+  if (soft) {   // something was said while this card is up: write it in, bring it into view, leave what's being typed alone
+    const fresh = [...$('thread').querySelectorAll('.tn.new')];
+    fresh.forEach(r => r.matches('.tutor') ? writeIn(r.querySelector('.sx'), 40) : riseIn(r, 0, 300));
+    const last = fresh[fresh.length - 1] || (s.asked ? $('thread').lastElementChild : null);
+    if (last) last.scrollIntoView({ block: 'nearest', behavior: reduced.matches ? 'auto' : 'smooth' });
+  }
+}
+// History opens in place, above the turn in play, and the panel stays where it was on the screen.
+const toggleHist = () => { histOpen = !histOpen; threadSig = ''; const a = $('cardArea'), y = a.getBoundingClientRect().top; paintThread(S, false); scrollBy(0, a.getBoundingClientRect().top - y); };
+$('oldBtn').onclick = toggleHist; $('histBtn').onclick = toggleHist;
+// Minutes since this block was begun, from its marker in the history (null when there is none).
+function begunAgo(s) {
+  const b = [...(s.history || [])].reverse().find(e => e.kind === 'begin'); if (!b || !/^\d\d:\d\d$/.test(b.t || '')) return null;
+  const d = new Date(), m = d.getHours() * 60 + d.getMinutes() - (+b.t.slice(0, 2) * 60 + +b.t.slice(3));
+  return m < 0 ? m + 1440 : m;
+}
+function paintTail(s) {
+  // The ruled lines mean the tutor is writing: after an answer is handed in, and for the first minutes of a block while its first
+  // card is on the way. A room that is only resting (a block begun a while ago with nothing sent here, like Calc on the pad)
+  // shows the caret alone. Neither has a place under the list of subjects.
+  const ago = begunAgo(s), t = $('tail'), idle = !s.card && s.subject && !s.ended && !threadRows(s).cur.length && !LAUNCH.open;
+  const want = (s.card && s.submitted && s.pending) ? 'read' : !idle ? '' : (ago === null || ago <= 3) ? 'wait' : 'rest';
+  if (t.dataset.k === want) return;
+  t.dataset.k = want;
+  t.innerHTML = want === 'read' ? caretRow(s, 'Reading your answer') : want === 'wait' ? caretRow(s, 'Getting ready', 2) + cardSkel
+    : want === 'rest' ? `<li class="tn tutor pend"><span class="sp">${esc(lastName(s.who))}</span><div class="sx"><i class="caret" aria-hidden="true"></i><span class="sr">Nothing up yet</span></div></li>` : '';
+  if (want === 'read') t.firstElementChild.scrollIntoView({ block: 'nearest', behavior: reduced.matches ? 'auto' : 'smooth' });
+}
+// Ask for more while the card stays up: the ? in the margin opens one line; the question and its answer join the transcript.
+function setAsk(open) {
+  ASK.open = open; $('askRow').hidden = !open; $('askBtn').setAttribute('aria-expanded', open); $('askLine').classList.toggle('open', open);
+  if (!open) return; const ta = $('askText'); ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 2 + 'px';
+}
+$('askBtn').onclick = () => { setAsk(!ASK.open); if (ASK.open) $('askText').focus({ preventScroll: true }); };
+$('askText').oninput = () => { const ta = $('askText'); ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 2 + 'px'; };
+$('askText').onkeydown = e => {
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('askRow').requestSubmit(); }
+  if (e.key === 'Escape') { setAsk(false); $('askBtn').focus({ preventScroll: true }); }
+};
+$('askRow').onsubmit = async e => {
+  e.preventDefault(); const ta = $('askText'), text = ta.value.trim(); if (!text || !S.card) return;
+  const b = $('askRow').querySelector('button'); b.disabled = true;
+  try { await shareDraft(S.card);
+    const r = await api('note', { card: S.card.id, text: (H.where ? H.where() : '') + text }); if (!r.ok) throw new Error(r.error || 'not sent');
+    const tag = $('askRow').querySelector('.notsent'); if (tag) tag.remove(); ta.value = ''; setAsk(false); b.disabled = false; poll(); }
+  catch (err) { b.disabled = false; notSent(b, 'Ask'); }
+};
+// A question asked mid-answer goes with what they have written so far, so they never hand in just to show where they're stuck.
+// Timed essays and sets keep their own drafts.
+async function shareDraft(c) {
+  if (!c || c.type === 'canvas' || c.type === 'mcq') return;
+  const text = [...$('cardArea').querySelectorAll('textarea')].map(t => t.value.trim()).filter(Boolean).join('\n\n');
+  if (text) try { await api('draft', { card: c.id, text, t: Date.now() / 1000 }); } catch (e) {}
+}
+// Where the page rests after a new card: at the top when the turn in play fits (it usually does, with the history folded);
+// otherwise from the tutor's reply down.
+function settle() {
+  const card = $('cardArea').firstElementChild, tail = $('tail').lastElementChild, ask = $('askLine').hidden ? null : $('askLine');
+  const rows = [...$('thread').children].filter(x => x.matches('.tn') && x.offsetParent), end = tail || ask || card || rows[rows.length - 1];
+  const stacked = matchMedia('(max-width: 860px)').matches && $('desk').classList.contains('has-src');
+  const top = $('desk').getBoundingClientRect().top + scrollY + (stacked ? $('leaf').offsetHeight : 0), Y = el => el.getBoundingClientRect().top + scrollY;
+  const over = () => !!end && Y(end) + end.offsetHeight > innerHeight - 16;
+  tighten(!!(H.working && H.working()));   // a lesson reopened past its first step counts as already at work
+  if (!end || (!histOpen && !over())) { scrollTo({ top: 0, behavior: 'instant' }); settledAt = scrollY; return; }
+  const fits = el => !!el && Y(end) + end.offsetHeight - Y(el) <= innerHeight - top - 40;
+  const first = rows.find(x => !x.matches('.fold')), now = $('thread').querySelector('.tn.now');
+  const pick = fits(first) ? first : now && now.offsetParent ? now : card || first;
+  scrollTo({ top: pick ? Math.max(0, Y(pick) - top - 24) : 0, behavior: 'instant' });
+  settledAt = scrollY;
+}
+// A turn that would run past the bottom of the window is set tighter (less air, a size down) before anyone has to scroll.
+// Once the learner is at work on the card (`working`), a message they have already read may also close to two lines.
+function tighten(working) {
+  const desk = $('desk'), end = $('tail').lastElementChild || ($('askLine').hidden ? null : $('askLine')) || $('cardArea').firstElementChild;
+  const over = () => end.getBoundingClientRect().bottom + scrollY > innerHeight - 10;
+  desk.classList.remove('tight', 'tight2'); if (!end || histOpen) return;
+  if (over()) desk.classList.add('tight');
+  if (working && over()) desk.classList.add('tight2');
+}
+$('thread').addEventListener('click', e => { const row = e.target.closest('.tn.now'); if (row && $('desk').classList.contains('tight2') && !row.classList.contains('full') && !getSelection().toString()) row.classList.add('full'); });
+let settledAt = -1;   // the web fonts land after the first paint and move every line: rest again, unless the learner has scrolled since
+document.fonts.ready.then(() => { if (S && Math.abs(scrollY - settledAt) < 4) settle(); layoutNotes(); });
+
+
+/* ---------- shared pieces ---------- */
+/* ---------- the page: the text, picture or writing a card is about ---------- */
+// It sits on the left and stays there. A follow-up card that brings no text of its own keeps the last one (the server carries it),
+// so the poem, the prompt or the essay under discussion never leaves while the questions change.
+const hasLines = c => !!c && Array.isArray(c.lines) && c.lines.length > 0;
+// The words a question points at, shown right above it so nobody scrolls up to find them (ROOM.md, "What the question points at").
+const ctxHTML = c => { const x = c && c.context; if (!x || !x.text) return '';
+  const label = x.cite || (x.who === 'You' ? 'You wrote' : x.who ? lastName(x.who) : '');
+  return `<div class="rtext${x.who === 'You' ? ' mine' : ''}">${label ? `<cite>${esc(label)}</cite>` : ''}${String(x.text).split(/\n[ \t]*\n/).filter(q => q.trim()).map(q => `<p>${esc(q.trim())}</p>`).join('')}</div>`; };
+// Lines numbered from c.from (default 1), marks by that numbering. A blank line is a stanza break: it counts, but shows no number.
+function poemHTML(c) {
+  if (!hasLines(c)) return '';
+  const marks = new Set((c.marks || []).map(Number)), from = parseInt(c.from) || 1;
+  return `<figure class="poem">${c.cite ? `<cite>${esc(c.cite)}</cite>` : ''}` +
+    c.lines.map((t, i) => { const n = from + i, brk = !String(t).trim();
+      return `<div class="ln${marks.has(n) ? ' mk' : ''}${brk ? ' brk' : ''}"><div class="n">${n}</div><div class="t">${esc(t)}</div></div>`; }).join('') + '</figure>';
+}
+function proseHTML(c) {
+  const paras = String(c.text || '').replace(/\r/g, '').split(/\n[ \t]*\n/).map(p => p.replace(/^\n+|\s+$/g, '')).filter(Boolean);
+  return `<div class="rv"><div>${c.title ? `<h3 class="rtitle">${rich(c.title)}</h3>` : ''}<div class="rtext">${c.cite ? `<cite>${esc(c.cite)}</cite>` : ''}${paras.map(p => `<p>${esc(p)}</p>`).join('')}</div></div><ol class="rnotes" aria-label="Notes"></ol></div>`;
+}
+const MEDIA = ['figure', 'image', 'video', 'pdf'], BLEED = ['figure', 'video'];   // a picture or a PDF sits in the viewer's card; a figure or a video runs edge to edge
+const mediaKind = o => o ? MEDIA.find(k => o[k]) : undefined;
+const withText = (c, body) => body;   // the text is on the page now, not inside the card
+function sourceKind(c) {
+  if (!c) return null;
+  if (c.type === 'lesson') return lessonHasVis(c) ? 'vis' : null;
+  if (hasLines(c)) return 'lines';
+  if (typeof c.text === 'string' && c.text.trim()) return 'prose';
+  if (Array.isArray(c.resources) && c.resources.length) return 'resources';
+  return mediaKind(c) || null;
+}
+let srcSig = '';
+// The pins: the question this task answers, then the learner's writing for it so far. The server carries both from card to card.
+const pinBody = (x, numbered) => hasLines(x)
+  ? (numbered ? x.lines.map((l, i) => `<div class="wl"><i>${i + 1}</i><span>${esc(l)}</span></div>`).join('') : x.lines.filter(l => String(l).trim()).map(l => `<p>${esc(l)}</p>`).join(''))
+  : String(x.text || '').split(/\n[ \t]*\n/).filter(q => q.trim()).map(q => `<p>${esc(q.trim())}</p>`).join('');
+const pinHTML = (x, label, mine) => x && (hasLines(x) || x.text) ? `<section class="pin${mine ? ' mine' : ''}"><div class="pinl">${esc(x.cite || label)}</div><div class="pb">${pinBody(x, mine)}</div><button class="more" type="button" aria-expanded="false">Show all</button></section>` : '';
+const pinsHTML = c => c ? pinHTML(c.task, 'Question', false) + pinHTML(c.work, 'You wrote', true) : '';
+// A pin longer than its brief is cut with "Show all"; what the learner opened stays open while the same pin is up.
+const PINS = { open: new Set() };
+function fitPins() {
+  $('pins').querySelectorAll('.pin').forEach(pn => { const b = pn.querySelector('.pb'), key = b.textContent, open = PINS.open.has(key), btn = pn.querySelector('.more');
+    pn.classList.toggle('cut', !open); const long = open || b.scrollHeight > b.clientHeight + 6; pn.classList.toggle('long', long); if (!long) pn.classList.remove('cut');
+    btn.setAttribute('aria-expanded', open); btn.textContent = open ? 'Show less' : 'Show all'; });
+  fitRes();
+}
+$('pins').addEventListener('click', e => { const btn = e.target.closest('.more'); if (!btn) return; const key = btn.closest('.pin').querySelector('.pb').textContent;
+  if (PINS.open.has(key)) PINS.open.delete(key); else PINS.open.add(key); fitPins(); pad(); });
+// A viewer on the reference side takes exactly the height left under the pins and the context, so the side itself does not scroll.
+function fitRes() { const leaf = $('leaf'), v = leaf.querySelector('.resv'); if (!v || matchMedia('(max-width: 860px)').matches) { leaf.style.removeProperty('--res-h'); return; }
+  const top = v.getBoundingClientRect().top - leaf.getBoundingClientRect().top + leaf.scrollTop; leaf.style.setProperty('--res-h', Math.round(Math.max(300, Math.min(920, leaf.clientHeight - top - 30))) + 'px'); }
+addEventListener('resize', fitRes);
+const LEAF = { away: null };   // the signature of a text the learner put away with the book button
+function sourceSig(c) {
+  const kind = sourceKind(c);
+  return kind ? JSON.stringify([kind, kind === 'lines' ? [c.lines, c.cite, c.from] : kind === 'prose' ? [c.text, c.title, c.cite] : kind === 'vis' ? c.id : c[kind]]) : '';
+}
+function paintSource(c) {
+  const kind = sourceKind(c), desk = $('desk'), leaf = $('leaf'), src = $('source');
+  const sig = sourceSig(c), fresh = sig !== srcSig, top = leaf.scrollTop; srcSig = sig;
+  const pins = pinsHTML(c), ctx = ctxHTML(c), any = !!kind || !!pins || !!ctx, away = any && LEAF.away === sig;
+  if ($('ctxbox').dataset.sig !== ctx) { $('ctxbox').dataset.sig = ctx; $('ctxbox').innerHTML = ctx; riseIn($('ctxbox'), 0, 320); }
+  $('leafBtn').hidden = !any; $('leafBtn').setAttribute('aria-pressed', !away);
+  desk.classList.toggle('has-src', any && !away); desk.dataset.src = kind || (pins ? 'lines' : '');
+  if ($('pins').dataset.sig !== pins) { $('pins').dataset.sig = pins; $('pins').innerHTML = pins; math($('pins')); }
+  fitPins();
+  if (fresh || kind === 'lines' || kind === 'prose') {
+    if (fresh) { srcCleanups.forEach(f => f()); srcCleanups = []; }
+    src.innerHTML = !kind ? '' : kind === 'lines' ? poemHTML(c) : kind === 'prose' ? proseHTML(c)
+      : kind === 'vis' ? '<figure class="visual" id="vis"></figure>' : `<figure class="visual${BLEED.includes(kind) ? ' bleed' : ' wide'}" id="sideVis"></figure>`;
+    if (kind && (MEDIA.includes(kind) || kind === 'resources')) mountSide(c);
+  }
+  leafSeps(c);
+  if (!kind) { pad(); return false; }
+  leaf.scrollTop = fresh ? 0 : top;
+  showInLeaf(src.querySelector('.ln.mk'), false);   // the marked line is in view without moving the rest of the page
+  fitRes(); pad();
+  return fresh && !away;
+}
+// A rule and some air above every block of the reference side but the first, in the order they are shown.
+function leafSeps(c) {
+  let seen = false; const pinned = !!$('pins').firstElementChild;
+  ['ctxbox', 'source'].forEach(id => { const el = $(id), full = !!el.firstElementChild; el.classList.toggle('sep', full && (seen || pinned)); el.classList.toggle('ap', full && !seen && pinned); seen = seen || full; });
+}
+function showInLeaf(el, smooth) {
+  if (!el) return; const leaf = $('leaf'), r = el.getBoundingClientRect(), lr = leaf.getBoundingClientRect(), under = getComputedStyle($('pins')).position === 'sticky' ? $('pins').offsetHeight : 0;
+  if (r.top < lr.top + under + 16 || r.bottom > lr.bottom - 16) leaf.scrollBy({ top: r.top - lr.top - under - (lr.height - under) * .3, behavior: smooth && !reduced.matches ? 'smooth' : 'instant' });
+}
+// What is stuck to the top of the window (the spine, and the page when it is stacked above the talk in a narrow window) is kept clear by every scroll-into-view.
+function pad() {
+  const stacked = matchMedia('(max-width: 860px)').matches && $('desk').classList.contains('has-src');
+  document.documentElement.style.scrollPaddingTop = $('desk').offsetTop + (stacked ? $('leaf').offsetHeight : 0) + 20 + 'px';
+}
+addEventListener('resize', pad);
+(() => {
+  const desk = $('desk'), split = $('split');
+  const use = () => { const w = +store.get('room-split'); if (w >= 24 && w <= 72) desk.style.setProperty('--src-w', w + '%'); else desk.style.removeProperty('--src-w');
+    desk.classList.toggle('swap', store.get('room-swap') === '1'); };
+  const setW = pct => { store.set('room-split', String(Math.round(Math.min(72, Math.max(24, pct))))); use(); layoutNotes(); };
+  const now = () => { const r = $('leaf').getBoundingClientRect(); return r.width / desk.getBoundingClientRect().width * 100; };
+  split.addEventListener('pointerdown', e => {
+    if (e.target.closest('.swapb') || e.button) return; e.preventDefault(); split.setPointerCapture(e.pointerId); split.classList.add('drag'); document.body.classList.add('resizing');
+    const box = desk.getBoundingClientRect(), swap = desk.classList.contains('swap');
+    const move = ev => setW((swap ? box.right - ev.clientX : ev.clientX - box.left) / box.width * 100);
+    const up = () => { split.classList.remove('drag'); document.body.classList.remove('resizing'); split.removeEventListener('pointermove', move); pad(); };
+    split.addEventListener('pointermove', move); split.addEventListener('pointerup', up, { once: true }); split.addEventListener('pointercancel', up, { once: true });
+  });
+  split.addEventListener('dblclick', e => { if (e.target.closest('.swapb')) return; store.set('room-split', ''); use(); layoutNotes(); });
+  split.addEventListener('keydown', e => { const d = e.key === 'ArrowLeft' ? -2 : e.key === 'ArrowRight' ? 2 : 0; if (!d || e.target !== split) return; e.preventDefault(); setW(now() + (desk.classList.contains('swap') ? -d : d)); });
+  $('swapBtn').onclick = () => { store.set('room-swap', desk.classList.contains('swap') ? '' : '1'); fadeSwap(() => { use(); layoutNotes(); }); };
+  use();
+})();
+$('leafBtn').onclick = () => {
+  const flip = () => { LEAF.away = LEAF.away === srcSig ? null : srcSig; const away = LEAF.away === srcSig;
+    $('desk').classList.toggle('has-src', !away); $('leafBtn').setAttribute('aria-pressed', !away); pad(); if (!away && S && S.card) layoutNotes(); };
+  fadeSwap(flip);
+};
+
+const srcFor = m => (document.documentElement.dataset.theme === 'light' && m.light) || m.src;
+// A figure is the tutor's own HTML (an anatomy build) in a sandboxed frame that reports its height; a video starts muted unless it has sound.
+/* ---------- a picture or a PDF on the page: the resource card ----------
+   The layout is AssessPrep's: a title, a tab per file, Full screen, and a framed viewer under its own dark bar. The handling is not:
+   pinch or ctrl-scroll zooms about the pointer, a double-click zooms in on that spot and back, drag pans, the page number follows the
+   scroll, and after a zoom the page on screen is redrawn sharp behind the stretched one, so nothing ever goes blank. */
+const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+let pdfjsReady = null;
+const loadPdfjs = () => pdfjsReady || (pdfjsReady = new Promise((ok, no) => { if (window.pdfjsLib) return ok(window.pdfjsLib);
+  const s = document.createElement('script'); s.src = PDFJS + 'pdf.min.js';
+  s.onload = () => { pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; ok(pdfjsLib); };
+  s.onerror = () => { pdfjsReady = null; s.remove(); no(new Error('pdf.js did not load')); }; document.head.appendChild(s); }));
+const RICON = {
+  up: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 10 8 5.5 12.5 10"/></svg>', down: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 6 8 10.5 12.5 6"/></svg>',
+  minus: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8h9"/></svg>', plus: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8h9M8 3.5v9"/></svg>',
+  full: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2.5H2.500V6M10 2.500h3.500V6M6 13.500H2.500V10M10 13.500h3.500V10"/></svg>',
+  x: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>' };
+// A card's image / pdf / resources as one list of {kind, src, title, alt, page}.
+const resItems = list => (list || []).map(x => { const kind = x.pdf ? 'pdf' : 'image', raw = x[kind], m = typeof raw === 'string' ? { src: raw } : (raw || {});
+  return { kind, src: kind === 'image' ? srcFor(m) : m.src, alt: m.alt || x.alt || '', title: x.title || m.title || '', page: Math.max(1, parseInt(x.page || m.page) || 1), light: !!m.light }; }).filter(x => x.src);
+function resourceView(box, items, title) {
+  box.classList.remove('loading');
+  const count = {}, name = x => (items.length > 1 && x.title) || `${x.kind === 'pdf' ? 'PDF' : 'Image'} ${count[x.kind] = (count[x.kind] || 0) + 1}`;   // one file: its title is the heading, the tab names its kind
+  box.innerHTML = `<section class="res">${title ? `<h3 class="rest">${esc(title)}</h3>` : ''}
+    <div class="resbar"><div class="restabs" role="tablist">${items.map((x, i) => `<button type="button" role="tab" data-i="${i}" aria-selected="${i === 0}">${esc(name(x))}</button>`).join('')}</div>
+      <button class="resfs" type="button">${RICON.full}<span>Full screen</span></button></div>
+    <div class="resslot"><div class="resv wait" tabindex="0"><div class="restool"></div><div class="resport"></div></div></div></section>`;
+  const sec = box.firstElementChild, slot = sec.querySelector('.resslot'), v = sec.querySelector('.resv'), fs = sec.querySelector('.resfs'); let pane = null, dlg = null;
+  const show = i => { if (pane) pane.destroy(); sec.querySelectorAll('[role=tab]').forEach((b, j) => b.setAttribute('aria-selected', j === i)); v.classList.add('wait'); pane = resPane(v, items[i]); };
+  sec.querySelector('.restabs').onclick = e => { const b = e.target.closest('[role=tab]'); if (b && b.getAttribute('aria-selected') !== 'true') show(+b.dataset.i); };
+  // Full screen: the same viewer, moved into a sheet over the room, so the page and the zoom carry across both ways.
+  const close = () => { if (!dlg) return; const d = dlg; dlg = null; slot.appendChild(v); d.close(); d.remove(); fs.focus({ preventScroll: true }); };
+  const open = () => { if (dlg) return; dlg = document.createElement('dialog'); dlg.className = 'resdlg'; dlg.innerHTML = `<button class="resx" type="button" aria-label="Close">${RICON.x}</button>`;
+    document.body.appendChild(dlg); dlg.appendChild(v); dlg.showModal(); dlg.firstElementChild.onclick = close;
+    dlg.addEventListener('cancel', e => { e.preventDefault(); close(); }); dlg.addEventListener('click', e => { if (e.target === dlg) close(); });
+    if (!reduced.matches) dlg.animate([{ opacity: 0, transform: 'scale(.975)' }, { opacity: 1, transform: 'none' }], { duration: 190, easing: 'cubic-bezier(.2, .8, .2, 1)' });
+    v.focus({ preventScroll: true }); };
+  fs.onclick = open; v.addEventListener('resfull', () => dlg ? close() : open());
+  show(0);
+  return { theme: items.some(x => x.light), destroy: () => { close(); if (pane) pane.destroy(); } };
+}
+// One file in the viewer. Zoom 1 is "fits the width"; every page is a box whose width is a CSS variable times the zoom, so a pinch is
+// one style write per frame. A PDF page's canvas stretches with its box and is replaced by a sharp one 160ms after the zoom settles.
+function resPane(v, it) {
+  const tool = v.querySelector('.restool'), port = v.querySelector('.resport'), pdf = it.kind === 'pdf', ac = new AbortController(), on = { signal: ac.signal };
+  let z = 1, zFit = 1, ar = 4 / 3, dead = false, doc = null, pages = [], cur = 1, anchor = { n: it.page, f: 0 }, sharpT = 0, anim = 0, raf = 0, io = null, chain = Promise.resolve(), ready = false; const live = new Map();
+  const STEPS = [1, 1.25, 1.5, 2, 3, 4, 6], zmin = () => Math.min(zFit, .5), clamp = n => Math.min(6, Math.max(zmin(), n));
+  tool.className = 'restool';
+  tool.innerHTML = `<div class="rg">${pdf ? `<button type="button" data-a="prev" aria-label="Previous page">${RICON.up}</button><button type="button" data-a="next" aria-label="Next page">${RICON.down}</button><input class="rpn" inputmode="numeric" aria-label="Page" value="${it.page}"><span class="rpt"></span>` : ''}</div>
+    <div class="rg"><button type="button" data-a="out" aria-label="Zoom out">${RICON.minus}</button><button type="button" data-a="in" aria-label="Zoom in">${RICON.plus}</button>
+      <select class="rzs" aria-label="Zoom"><option value="w">Fit width</option><option value="p">Fit page</option><option value="1.5">150%</option><option value="2">200%</option><option value="3">300%</option><option value="c" hidden></option></select></div><div class="rg"></div>`;
+  port.innerHTML = `<div class="resstage${pdf ? '' : ' one'}"></div>`; port.scrollTop = port.scrollLeft = 0;
+  const stage = port.firstElementChild, sel = tool.querySelector('.rzs'), pn = tool.querySelector('.rpn'), pt = tool.querySelector('.rpt');
+  const label = () => { const near = n => Math.abs(z - n) < .004; const o = sel.querySelector('[value=c]');
+    if (near(1)) sel.value = 'w'; else if (near(zFit)) sel.value = 'p'; else if ([1.5, 2, 3].some(near)) sel.value = String([1.5, 2, 3].find(near)); else { o.hidden = false; o.textContent = Math.round(z * 100) + '%'; sel.value = 'c'; }
+    tool.querySelector('[data-a=out]').disabled = z <= zmin() + .004; tool.querySelector('[data-a=in]').disabled = z >= 6 - .004; };
+  const pageAt = (x, y) => { let best = pages[0], d = Infinity; for (const p of pages) { const r = p.getBoundingClientRect(); if (r.bottom < y - 2000) continue; const dy = y < r.top ? r.top - y : y > r.bottom ? y - r.bottom : 0; if (dy < d) { d = dy; best = p; } if (r.top > y) break; } return best; };
+  // Set the zoom so the point under (cx, cy) stays under it.
+  const setZoom = (nz, cx, cy) => { if (!ready) return; nz = clamp(nz); if (Math.abs(nz - z) < 1e-4) return;
+    const pr = port.getBoundingClientRect(); if (cx === undefined) { cx = pr.left + pr.width / 2; cy = pr.top + pr.height / 2; }
+    const el = pageAt(cx, cy), r = el.getBoundingClientRect(), fx = (cx - r.left) / r.width, fy = (cy - r.top) / r.height;
+    z = nz; stage.style.setProperty('--z', z);
+    const r2 = el.getBoundingClientRect(); port.scrollLeft += r2.left + fx * r2.width - cx; port.scrollTop += r2.top + fy * r2.height - cy;
+    label(); if (pdf) { clearTimeout(sharpT); sharpT = setTimeout(sharpen, 160); } };
+  const glide = (to, cx, cy) => { cancelAnimationFrame(anim); to = clamp(to); if (reduced.matches || document.hidden) return setZoom(to, cx, cy);
+    const from = z, t0 = performance.now(), step = t => { const k = Math.min(1, (t - t0) / 200), e = 1 - Math.pow(1 - k, 3); setZoom(from * Math.pow(to / from, e), cx, cy); if (k < 1) anim = requestAnimationFrame(step); }; anim = requestAnimationFrame(step); };
+  const stepZoom = dir => { const list = [...new Set([zmin(), zFit, ...STEPS])].sort((a, b) => a - b); const nxt = dir > 0 ? list.find(n => n > z + .004) : [...list].reverse().find(n => n < z - .004); if (nxt) glide(nxt); };
+  const home = () => 1;   // at rest a file fits the width: a page of text is readable, and Fit page is one tap away
+  // Where the reader is: the page at the top of the port and how far into it, kept through every resize and the move to full screen.
+  const track = () => { raf = 0; if (!ready) return; const top = port.scrollTop + 13, mid = port.scrollTop + port.clientHeight * .4; let a = pages[0], c = pages[0];
+    for (const p of pages) { if (p.offsetTop <= top) a = p; if (p.offsetTop <= mid) c = p; else break; }
+    anchor = { n: pages.indexOf(a) + 1, f: Math.max(0, (port.scrollTop + 12 - a.offsetTop) / Math.max(1, a.offsetHeight)) };
+    const n = pages.indexOf(c) + 1; if (n !== cur) { cur = n; if (pn && document.activeElement !== pn) pn.value = n; }
+    if (pdf) { tool.querySelector('[data-a=prev]').disabled = cur <= 1; tool.querySelector('[data-a=next]').disabled = cur >= pages.length; } };
+  const go = (n, smooth) => { n = Math.min(pages.length, Math.max(1, n | 0)); const el = pages[n - 1]; if (!el) return; port.scrollTo({ top: el.offsetTop - 12, behavior: smooth && !reduced.matches ? 'smooth' : 'instant' }); };
+  const layout = first => { const pw = port.clientWidth, ph = port.clientHeight; if (!pw || !ph || !pages.length) return; const keep = anchor, bw = Math.max(140, pw - 24);
+    const wasHome = first || Math.abs(z - home()) < .004;   // still at its resting zoom: keep it there when the frame changes size (full screen, the divider)
+    zFit = Math.min(1, (ph - 24) / (bw / ar)); if (wasHome) z = home(); z = clamp(z);
+    stage.style.setProperty('--bw', bw + 'px'); stage.style.setProperty('--z', z); ready = true; label();
+    const el = pages[keep.n - 1] || pages[0]; port.scrollTop = pdf ? el.offsetTop - 12 + keep.f * el.offsetHeight : keep.f * el.offsetHeight; track(); if (pdf) sharpen(); };
+  // PDF pages are drawn one at a time, nearest first in, and only while still near the screen.
+  const want = n => { const el = pages[n - 1]; if (!el || el._busy || !doc) return; if (el._w && Math.abs(el._w - el.clientWidth) < 1) return; el._busy = true;
+    chain = chain.then(async () => { try { if (dead || !el._near) return; const pg = await doc.getPage(n), v1 = pg.getViewport({ scale: 1 }); el.style.aspectRatio = `${v1.width} / ${v1.height}`;
+      const w = el.clientWidth, dpr = Math.min(window.devicePixelRatio || 1, 3), s = Math.min(w * dpr / v1.width, Math.sqrt(16e6 / (v1.width * v1.height))), vp = pg.getViewport({ scale: s });
+      const cv = document.createElement('canvas'); cv.width = Math.ceil(vp.width); cv.height = Math.ceil(vp.height);
+      await pg.render({ canvasContext: cv.getContext('2d', { alpha: false }), viewport: vp }).promise; if (dead) return;
+      const old = el.firstElementChild; el.appendChild(cv); if (old) old.remove(); else if (!reduced.matches) cv.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, easing: 'ease-out' });
+      el._w = w; live.set(n, el);
+      if (live.size > 18) { const far = [...live.keys()].sort((a, b) => Math.abs(b - cur) - Math.abs(a - cur))[0]; if (Math.abs(far - cur) > 6) { const o = live.get(far); o.replaceChildren(); o._w = 0; live.delete(far); } }
+    } catch (e) {} finally { el._busy = false; } }); };
+  const sharpen = () => { if (dead) return; const near = pages.map((p, i) => p._near ? i + 1 : 0).filter(Boolean).sort((a, b) => Math.abs(a - cur) - Math.abs(b - cur)); near.forEach(want); };
+  const miss = () => { if (dead) return; v.classList.remove('wait'); tool.classList.add('off'); port.innerHTML = `<p class="resmiss">This ${pdf ? 'PDF' : 'picture'} didn't load. Press ? to tell the tutor.</p>`; };
+  if (pdf) {
+    const src = new URL(it.src, location.href).href;
+    loadPdfjs().then(lib => lib.getDocument({ url: src }).promise).then(async d => { if (dead) { d.destroy(); return; } doc = d;
+      const v1 = (await d.getPage(1)).getViewport({ scale: 1 }); if (dead) return; ar = v1.width / v1.height;
+      stage.innerHTML = Array.from({ length: d.numPages }, (_, i) => `<div class="respg" data-n="${i + 1}" style="aspect-ratio:${v1.width} / ${v1.height}"></div>`).join(''); pages = [...stage.children];
+      pt.textContent = '/ ' + d.numPages; anchor = { n: Math.min(it.page, d.numPages), f: 0 }; cur = 0;
+      io = new IntersectionObserver(es => es.forEach(e => { e.target._near = e.isIntersecting; if (e.isIntersecting) want(+e.target.dataset.n); }), { root: port, rootMargin: '800px 0px' });
+      pages.forEach(p => io.observe(p)); v.classList.remove('wait'); layout(true); })
+      .catch(() => { if (dead) return; v.classList.remove('wait'); tool.classList.add('off');   // no pdf.js (offline): the browser's own viewer
+        port.innerHTML = `<iframe class="respdf" title="${esc(it.title || it.alt || 'PDF')}" src="${esc(it.src)}#page=${it.page}&view=FitH" style="position:absolute;inset:0;height:100%"></iframe>`; });
+  } else {
+    stage.innerHTML = `<img class="respg" alt="${esc(it.alt)}" draggable="false">`; const im = stage.firstElementChild; pages = [im]; anchor = { n: 1, f: 0 };
+    im.onload = () => { if (dead) return; ar = im.naturalWidth / Math.max(1, im.naturalHeight); im.style.aspectRatio = `${im.naturalWidth} / ${im.naturalHeight}`; v.classList.remove('wait'); layout(true); };
+    im.onerror = miss; im.src = it.src;
+  }
+  const ro = new ResizeObserver(() => { if (ready) layout(false); }); ro.observe(port);
+  port.addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(track); }, { ...on, passive: true });
+  port.addEventListener('wheel', e => { if (!e.ctrlKey && !e.metaKey) return; e.preventDefault(); cancelAnimationFrame(anim); setZoom(z * Math.exp(-e.deltaY * (e.deltaMode ? .05 : .0115)), e.clientX, e.clientY); }, { ...on, passive: false });
+  port.addEventListener('dblclick', e => { if (!ready) return; glide(z > home() * 1.05 ? home() : Math.max(home() * 2, pdf ? 2 : 1), e.clientX, e.clientY); }, on);
+  port.addEventListener('pointerdown', e => { if (e.button !== 0 || e.pointerType === 'touch' || !ready) return; const x0 = e.clientX, y0 = e.clientY, sl = port.scrollLeft, st = port.scrollTop; let moved = false;
+    const move = ev => { if (!moved && Math.hypot(ev.clientX - x0, ev.clientY - y0) < 4) return; if (!moved) { moved = true; port.classList.add('grab'); try { port.setPointerCapture(e.pointerId); } catch (er) {} }
+      port.scrollLeft = sl - (ev.clientX - x0); port.scrollTop = st - (ev.clientY - y0); };
+    const up = () => { port.classList.remove('grab'); port.removeEventListener('pointermove', move); port.removeEventListener('pointerup', up); port.removeEventListener('pointercancel', up); };
+    port.addEventListener('pointermove', move); port.addEventListener('pointerup', up); port.addEventListener('pointercancel', up); }, on);
+  tool.addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.disabled) return; const a = b.dataset.a;
+    if (a === 'in') stepZoom(1); else if (a === 'out') stepZoom(-1); else if (a === 'prev') go(cur - 1, true); else if (a === 'next') go(cur + 1, true); }, on);
+  sel.addEventListener('change', () => { const val = sel.value; glide(val === 'w' ? 1 : val === 'p' ? zFit : +val || z); v.focus({ preventScroll: true }); }, on);
+  if (pn) { pn.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') { go(parseInt(pn.value) || cur, true); pn.blur(); v.focus({ preventScroll: true }); } }, on);
+    pn.addEventListener('focus', () => pn.select(), on); pn.addEventListener('blur', () => { pn.value = cur; }, on); }
+  // Keys while the viewer has focus: + and - zoom, 0 goes back to fit, the arrows and Page keys turn pages, F is full screen.
+  v.addEventListener('keydown', e => { if (e.target === pn || e.target === sel || e.metaKey || e.ctrlKey || e.altKey) return; const k = e.key; let hit = true;
+    if (k === '+' || k === '=') stepZoom(1); else if (k === '-' || k === '_') stepZoom(-1); else if (k === '0') glide(home());
+    else if (k === 'f' || k === 'F') v.dispatchEvent(new Event('resfull'));
+    else if (pdf && (k === 'ArrowRight' || k === 'PageDown')) go(cur + 1, true); else if (pdf && (k === 'ArrowLeft' || k === 'PageUp')) go(cur - 1, true);
+    else if (k === 'Home') port.scrollTo({ top: 0 }); else if (k === 'End') port.scrollTo({ top: port.scrollHeight });
+    else if (k === ' ') port.scrollBy({ top: (e.shiftKey ? -1 : 1) * port.clientHeight * .85, behavior: reduced.matches ? 'instant' : 'smooth' }); else hit = false;
+    if (hit) { e.preventDefault(); e.stopPropagation(); } }, on);
+  return { destroy: () => { dead = true; ac.abort(); ro.disconnect(); if (io) io.disconnect(); cancelAnimationFrame(anim); cancelAnimationFrame(raf); clearTimeout(sharpT); if (doc) doc.destroy(); tool.innerHTML = ''; port.innerHTML = ''; } };
+}
+function mediaView(box, m, kind, title) {
+  m = typeof m === 'string' ? { src: m } : (m || {});
+  if (kind === 'image' || kind === 'pdf') return resourceView(box, resItems([{ [kind]: m }]), m.title || title || m.alt || '');   // pictures and PDFs open in the viewer
+  const loaded = () => box.classList.remove('loading'); box.classList.add('loading');   // a skeleton holds the place until the picture is there
+  if (kind === 'video') {
+    box.innerHTML = `<video class="mvid" src="${esc(m.src)}"${m.poster ? ` poster="${esc(m.poster)}"` : ''} controls playsinline preload="metadata"${m.loop ? ' loop' : ''}${m.alt ? ` aria-label="${esc(m.alt)}"` : ''}></video>`;
+    const v = box.firstElementChild; v.onloadeddata = v.onerror = loaded; setTimeout(loaded, 4000);
+    if (!m.sound) { v.muted = true; if (!reduced.matches) v.play().catch(() => {}); }
+    return { destroy: () => v.pause() };
+  }
+  box.innerHTML = `<iframe class="mfig" sandbox="allow-scripts" title="${esc(m.alt || 'Figure')}"></iframe>`;
+  const fr = box.firstElementChild;   // loaded as srcdoc: no sub-frame navigation for a browser or blocker to refuse
+  fetch(srcFor(m)).then(r => r.ok ? r.text() : Promise.reject(r.status)).then(html => { fr.onload = loaded; fr.srcdoc = html; setTimeout(loaded, 4000); })
+    .catch(() => { loaded(); box.innerHTML = '<p class="vmiss">This figure didn\'t load. Press ? to tell the tutor.</p>'; });
+  const on = e => { if (e.source === fr.contentWindow && e.data && e.data.roomFigure && e.data.h > 40) fr.style.height = Math.min(e.data.h, 2400) + 'px'; };
+  addEventListener('message', on);
+  return { theme: !!m.light, destroy: () => removeEventListener('message', on) };
+}
+function mountSide(c) {
+  const fig = $('sideVis'), kind = sourceKind(c); let v = null;
+  const draw = () => { if (v && v.destroy) v.destroy(); fig.innerHTML = '<div class="vis"></div>';
+    v = kind === 'resources' ? resourceView(fig.firstElementChild, resItems(c.resources), c.cite || '') : mediaView(fig.firstElementChild, c[kind], kind, c.cite || ''); };
+  const re = () => { if (v && v.theme) draw(); };
+  draw(); document.addEventListener('roomtheme', re);
+  srcCleanups.push(() => { document.removeEventListener('roomtheme', re); if (v && v.destroy) v.destroy(); });
+}
+// Two-step confirm for anything that can't be undone: the button becomes its consequence, a way back, and the action.
+function confirmStep(wrap, label, consequence, onYes) {
+  const btn = wrap.querySelector('button'); if (!btn) return;
+  btn.onclick = () => {
+    const keep = wrap.innerHTML;
+    wrap.innerHTML = `<span class="q" id="cq" role="alert">${esc(consequence)}</span><button class="btn ghost sm" data-no type="button">Not yet</button><button class="btn warn" data-yes type="button" aria-describedby="cq">Yes, ${esc(label.toLowerCase())}</button>`;
+    wrap.querySelector('[data-no]').focus({ preventScroll: true });
+    wrap.querySelector('[data-yes]').scrollIntoView({ block: 'nearest' });
+    wrap.querySelector('[data-no]').onclick = () => { wrap.innerHTML = keep; const b = wrap.querySelector('button'); b.disabled = false; confirmStep(wrap, label, consequence, onYes); b.focus(); };
+    wrap.querySelector('[data-yes]').onclick = () => { wrap.innerHTML = ''; onYes(); };
+  };
+}
+// Photos: the file picker, drag and drop onto the card, or paste. Each one uploads at once; a thumb is a button that removes it.
+function shrink(dataUrl) {
+  return new Promise(res => { const im = new Image(); im.onload = () => { const k = 128 / Math.max(im.width, im.height, 1), cv = document.createElement('canvas');
+    cv.width = Math.max(1, Math.round(im.width * Math.min(1, k))); cv.height = Math.max(1, Math.round(im.height * Math.min(1, k)));
+    cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); res(cv.toDataURL('image/jpeg', .7)); }; im.onerror = () => res(''); im.src = dataUrl; });
+}
+function photos(card, thumbs, list, id) {
+  const pk = 'room-photos-' + id; let kept = JSON.parse(store.get(pk) || 'null') || [];
+  const paint = () => {
+    list.length = 0; kept.forEach(p => list.push(p.path));
+    thumbs.innerHTML = kept.map((p, i) => `<button type="button" class="thumb" data-i="${i}" aria-label="Remove photo ${i + 1}">${p.thumb ? `<img src="${p.thumb}" alt="">` : ''}</button>`).join('');
+    thumbs.dispatchEvent(new Event('change'));
+  };
+  thumbs.onclick = e => { const b = e.target.closest('.thumb'); if (!b || b.disabled) return; kept.splice(+b.dataset.i, 1); store.set(pk, JSON.stringify(kept)); paint(); };
+  const add = async files => {
+    for (const f of files) {
+      if (!f.type.startsWith('image/')) continue;
+      const data = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(f); });
+      if (S.card?.id !== id) return;
+      const r = await api('upload', { card: id, name: f.name || 'photo', data });
+      if (S.card?.id !== id) return;   // the card changed while the file was in flight
+      if (r.path) { const thumb = await shrink(data); kept.push({ path: r.path, thumb }); store.set(pk, JSON.stringify(kept)); paint(); }
+    }
+  };
+  const fileEl = $('file'); fileEl.value = '';
+  fileEl.onchange = () => add([...fileEl.files]); cleanups.push(() => { fileEl.onchange = null; });
+  const over = e => { e.preventDefault(); card.classList.add('drag'); }, leave = () => card.classList.remove('drag');
+  const drop = e => { e.preventDefault(); leave(); add([...e.dataTransfer.files]); };
+  const paste = e => { const fs = [...(e.clipboardData?.files || [])]; if (fs.length) { e.preventDefault(); add(fs); } };
+  card.addEventListener('dragover', over); card.addEventListener('dragleave', leave); card.addEventListener('drop', drop);
+  document.addEventListener('paste', paste); cleanups.push(() => document.removeEventListener('paste', paste));
+  paint();
+  return () => fileEl.click();
+}
+function lockAll(card) {
+  card.querySelectorAll('textarea, input, .opt, .choice, .reading, .thumb, #photoBtn').forEach(x => { x.disabled = true; });
+  if (S && S.submitted) card.querySelectorAll('textarea.answer').forEach(x => { x.style.minHeight = '0'; x.style.height = 'auto'; x.style.height = x.scrollHeight + 2 + 'px'; });   // handed in: the box closes around the words
+}
+
+/* ---------- cards ---------- */
+// Teaching: the tutor shows an idea, then asks about what's on screen. Testing: getting out what the learner already knows.
+function cardMode(c) {
+  const m = String(c.mode || '').toLowerCase();
+  if (m.startsWith('teach')) return 'teach';
+  if (m.startsWith('test')) return 'test';
+  return c.type === 'lesson' ? 'teach' : c.type === 'close' || c.type === 'mcq' ? 'test' : '';
+}
+function render(draw) {
+  clearCard(); H = {}; $('askText').value = ''; setAsk(false);
+  const s = S, c = s.card, area = $('cardArea');
+  threadSig = ''; paintThread(s, false);
+  const freshSource = paintSource(c); $('desk').dataset.card = c ? c.type : '';
+  $('tail').dataset.k = '~'; area.innerHTML = '';
+  if (!c) { launcher(area, s); paintTail(s); settle(); if (draw) drawIn(false); return; }
+  const mode = cardMode(c), chip = mode ? `<span class="mode ${mode}">${mode === 'teach' ? 'Teaching' : 'Testing'}</span>` : '';
+  const head = c.item || c.n || c.must || mode ? `<header class="phead">${chip}<span class="pt">${esc(c.item || '')}</span>${c.must ? '<span class="must">must finish</span>' : ''}<span class="pn">${esc(c.n || '')}</span></header>` : '';
+  area.innerHTML = `<section class="card" aria-label="${esc(c.item || c.type)}">${head}<div class="pbody"></div></section>`;
+  const card = area.querySelector('.pbody');   // the card's own function draws inside the panel's body
+  try { ({ question: textCard, passage: textCard, canvas: canvasCard, mcq: mcqCard, choice: choiceCard, close: closeCard, lesson: lessonCard, review: reviewCard })[c.type](card, c, s); }
+  catch (e) { console.error(e); card.innerHTML = '<h2>This card couldn\'t be drawn. Press ? to tell the tutor.</h2>'; }
+  math(card); math($('source'));
+  noteSig = JSON.stringify(c.notes || []); paintNotes(card, c);
+  paintTail(s); settle();
+  if (draw) drawIn(freshSource);
+}
+
+function textCard(card, c, s) {
+  const body = `<h2>${rich(c.prompt)}</h2>
+    <textarea class="answer" id="ans" aria-label="Your answer"></textarea>
+    <div class="row"><button class="btn" id="go" type="button" disabled>Send <span class="kbd">⌘↩</span></button>
+      ${c.photo === false ? '' : '<button class="btn ghost" id="photoBtn" type="button">Add photo</button>'}<div class="thumbs" id="thumbs"></div></div>`;
+  card.innerHTML = withText(c, body);
+  const ans = $('ans'), go = $('go'), list = [];
+  const key = 'room-ans-' + c.id; ans.value = store.get(key) || '';
+  const chk = () => { if (!go.classList.contains('sent')) go.disabled = s.submitted || (ans.value.trim().length < 1 && !list.length); };
+  ans.addEventListener('input', () => { store.set(key, ans.value); chk(); });
+  if ($('photoBtn')) { $('thumbs').addEventListener('change', chk); $('photoBtn').onclick = photos(card, $('thumbs'), list, c.id); }
+  const send = async () => {
+    go.disabled = true; ans.disabled = true;
+    if (!await deliver(c.id, { answer: ans.value.trim(), photos: list })) { ans.disabled = false; notSent(go, 'Retry'); return; }
+    sentOK(go); lockAll(card); poll();
+  };
+  go.onclick = send;
+  ans.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !go.disabled) send(); });
+  H.update = st => { if (st.submitted) { lockAll(card); sentOK(go); } };
+  if (s.submitted) H.update(s); else { chk(); ans.focus({ preventScroll: true }); }
+}
+
+function canvasCard(card, c, s) {
+  const body = `
+    <div class="cv-head"><p class="prompt">${rich(c.prompt)}</p>
+      <div class="count" id="count" role="timer" aria-label="Essay time left"><div class="t" id="cd">${mmss(Math.round((c.minutes || 40) * 60))}</div></div></div>
+    <textarea class="claim" id="claim" rows="1" aria-label="Your argument in one sentence" placeholder="Your argument, in one sentence"></textarea>
+    <textarea class="write" id="write" aria-label="Essay" hidden></textarea>
+    <div class="foot"><span id="wc"></span><span class="sv" id="sv" style="opacity:0"><i></i>Saved</span>
+      <span class="confirm" id="act"></span></div>`;
+  card.innerHTML = withText(c, body);
+  const claim = $('claim'), w = $('write'), lk = 'room-essay-' + c.id;
+  const local = JSON.parse(store.get(lk) || 'null'), server = s.draft;
+  const d = (local && (!server || (local.t || 0) >= (server.t || 0))) ? local : (server || {});
+  claim.value = d.claim || c.claim || ''; w.value = d.text || '';
+  const grow = () => { claim.style.height = 'auto'; claim.style.height = claim.scrollHeight + 'px'; };
+  const words = () => { const t = w.value.trim(); $('wc').textContent = w.hidden ? '' : `${t ? t.split(/\s+/).length : 0} words`; };
+  let saveT = null, handed = false, shown = null;
+  const mark = on => { if (shown !== on) { shown = on; $('sv').style.opacity = on ? 1 : 0; } };
+  const save = () => {
+    const t = Date.now() / 1000;
+    store.set(lk, JSON.stringify({ claim: claim.value, text: w.value, t }));
+    clearTimeout(saveT);
+    saveT = setTimeout(async () => { try { const r = await api('draft', { card: c.id, claim: claim.value, text: w.value, t }); mark(!!r.ok); } catch (e) { mark(false); } }, 700);
+  };
+  cleanups.push(() => clearTimeout(saveT));
+  const handIn = async auto => {
+    if (handed) return; handed = true; clearTimeout(saveT);
+    w.disabled = true; claim.disabled = true; $('act').innerHTML = `<span class="done">${auto ? 'Time' : CHECK + ' Handed in'}</span>`;
+    if (await deliver(c.id, { claim: claim.value.trim(), text: w.value, auto: !!auto })) return poll();
+    handed = false; w.disabled = false;   // not in: give the button back; a timed-out card is handed in by the server from the draft
+    $('act').innerHTML = '<button class="btn warn sm" id="handBtn" type="button">Retry</button>';
+    $('handBtn').onclick = () => handIn(auto); notSent($('handBtn'), 'Retry');
+  };
+  const running = deadline => {
+    w.hidden = false; words();
+    $('act').innerHTML = '<button class="btn ghost sm" id="handBtn" type="button">Hand in</button>';
+    confirmStep($('act'), 'Hand in', 'Hand in now? It locks for grading.', () => handIn(false));
+    const total = Math.round((c.minutes || 40) * 60), warnAt = Math.min(300, Math.round(total * .2));
+    const tick = () => { const left = Math.round(deadline - now()); $('cd').textContent = mmss(Math.max(0, left));
+      $('count').classList.toggle('low', left <= warnAt); if (left <= 0) handIn(true); };
+    tick(); every(tick, 1000);
+  };
+  claim.addEventListener('input', () => { grow(); save(); });
+  w.addEventListener('input', () => { words(); save(); });
+  const ro = new ResizeObserver(grow); ro.observe(claim); cleanups.push(() => ro.disconnect());
+  H.update = st => {
+    if (st.submitted && !handed) { handed = true; lockAll(card); $('act').innerHTML = `<span class="done">${CHECK} Handed in</span>`; cardTimers.forEach(clearInterval); }
+    if (st.submitted) { const late = c.deadline && now() >= c.deadline - 1; $('cd').textContent = late ? 'Time' : 'Handed in'; $('count').classList.remove('low'); $('count').classList.add('over'); }
+  };
+  if (s.submitted) { w.hidden = false; words(); grow(); return H.update(s); }
+  if (c.deadline) { running(c.deadline); w.focus({ preventScroll: true }); }
+  else {
+    // The clock starts with the first word typed in either box; the server owns it (asked 11-16).
+    w.hidden = false; words();
+    let starting = false;
+    const begin = async () => {
+      if (starting || c.deadline || !(claim.value.trim() || w.value.trim())) return;
+      starting = true;
+      const r = await api('start', { card: c.id }).catch(() => ({}));
+      if (r.deadline) { c.deadline = r.deadline; running(r.deadline); } else starting = false;
+    };
+    claim.addEventListener('input', begin); w.addEventListener('input', begin);
+    claim.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); w.focus({ preventScroll: true }); } });
+    claim.focus({ preventScroll: true });
+  }
+  grow();
+}
+
+function mcqCard(card, c, s) {
+  const items = c.items, n = items.length;
+  card.innerHTML = withText(c, `
+      <div class="mcq-top"><div class="dots" id="dots" role="tablist" aria-label="Questions"></div>
+        <span class="timer" id="timer" role="timer" aria-label="Set time left"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="9" r="6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 5.5V9l2.2 1.4M6 1.5h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span id="mclock"></span></span>
+        ${c.source ? `<button class="tip" type="button" data-tip="${esc(c.source)}" aria-label="${esc(c.source)}">i</button>` : ''}</div>
+      <h2 id="mq" class="mq" tabindex="-1"></h2>
+      <div class="opts" id="opts" role="radiogroup" aria-labelledby="mq"></div>
+      <div class="row"><button class="btn ghost" id="prev" type="button">Back</button><button class="btn ghost" id="next" type="button">Next</button>
+        <span class="confirm" id="subWrap"><button class="btn" id="go" type="button" disabled>Submit set</button></span></div>
+      <div id="score"></div>`);
+  const lk = 'room-mcq-' + c.id;
+  const local = JSON.parse(store.get(lk) || 'null');
+  const fromLocal = local && local.picks && (!s.draft || (local.t || 0) >= (s.draft.t || 0));
+  let i = Math.min(n - 1, Math.max(0, (local && local.at) || 0)), pick = (fromLocal ? local.picks : s.draft && s.draft.answers) || Array(n).fill(null), result = c.result || null, sent = false;
+  const keep = () => { const t = Date.now() / 1000; store.set(lk, JSON.stringify({ picks: pick, t, at: i })); api('draft', { card: c.id, answers: pick, t }).catch(() => {}); };
+  const remember = () => { const l = JSON.parse(store.get(lk) || 'null') || { picks: pick, t: 0 }; l.at = i; store.set(lk, JSON.stringify(l)); };
+  const draw = focusSel => {
+    $('dots').innerHTML = items.map((_, j) => {
+      const st = result ? (result.right[j] ? 'ok' : 'miss') : pick[j] !== null ? 'has' : '';
+      return `<button type="button" role="tab" class="${st}" aria-selected="${j === i}" data-j="${j}" aria-label="Question ${j + 1}${result ? (result.right[j] ? ', right' : ', wrong') : pick[j] !== null ? ', answered' : ''}">${j + 1}</button>`;
+    }).join('');
+    $('mq').innerHTML = `${i + 1}. ${rich(items[i].q)}`;
+    $('opts').innerHTML = items[i].o.map((o, j) => {
+      const cls = result ? (j === result.keys[i] ? 'is-right' : pick[i] === j ? 'is-wrong' : '') : '';
+      return `<button type="button" class="opt ${cls}" role="radio" aria-checked="${pick[i] === j}" data-j="${j}" ${result ? 'disabled' : ''}><span class="l">${L[j]}</span><span>${rich(o)}</span></button>`;
+    }).join('');
+    if ($('go')) $('go').disabled = pick.some(p => p === null);
+    $('prev').disabled = i === 0; $('next').disabled = i === n - 1;
+    math(card);
+    if (focusSel) { const el = card.querySelector(focusSel); if (el) el.focus({ preventScroll: true }); }
+    if (!result) remember();
+  };
+  const showResult = r => {
+    result = r; cardTimers.forEach(clearInterval); $('subWrap').innerHTML = ''; $('timer').hidden = true;
+    $('score').innerHTML = `<div class="score" role="status">${r.score} of ${r.total}</div>`;
+    const miss = r.right.findIndex(x => !x); i = miss < 0 ? 0 : miss; draw();
+  };
+  const submit = async auto => {
+    if (sent || result) return; sent = true; $('subWrap').innerHTML = '';
+    const r = await deliver(c.id, { answers: pick, auto: !!auto });
+    if (!r) { sent = false; $('subWrap').innerHTML = '<button class="btn warn" id="go" type="button">Retry</button>'; $('go').onclick = () => submit(auto); notSent($('go'), 'Retry'); return; }
+    if (r.result) showResult(r.result); poll();
+  };
+  $('opts').onclick = e => { const b = e.target.closest('.opt'); if (!b || result) return; pick[i] = +b.dataset.j; keep(); draw(`.opt[data-j="${b.dataset.j}"]`); };
+  $('dots').onclick = e => { const d = e.target.closest('button'); if (d) { i = +d.dataset.j; draw(`#dots [data-j="${i}"]`); } };
+  $('prev').onclick = () => { i = Math.max(0, i - 1); draw(i === 0 ? '#next' : '#prev'); };
+  $('next').onclick = () => { i = Math.min(n - 1, i + 1); draw(i === n - 1 ? '#prev' : '#next'); };
+  // Letters pick, arrows move. On the document, because redrawing the options drops focus to the body.
+  const onKey = e => {
+    if (result || e.metaKey || e.ctrlKey || e.altKey || /TEXTAREA|INPUT/.test(e.target.tagName) || e.target.closest('.confirm, .askline')) return;
+    const j = L.indexOf(e.key.toUpperCase());
+    if (e.key.length === 1 && j >= 0 && j < items[i].o.length) { e.preventDefault(); pick[i] = j; keep(); draw(`.opt[data-j="${j}"]`); }
+    else if (e.key === 'ArrowRight' && i < n - 1) { e.preventDefault(); i++; draw('#mq'); }
+    else if (e.key === 'ArrowLeft' && i > 0) { e.preventDefault(); i--; draw('#mq'); }
+  };
+  document.addEventListener('keydown', onKey); cleanups.push(() => document.removeEventListener('keydown', onKey));
+  confirmStep($('subWrap'), 'Submit', 'Submit the set? Answers lock.', () => submit(false));
+  H.update = st => { if (st.card && st.card.result && !result) showResult(st.card.result); };
+  if (result) { showResult(result); return; }
+  draw(pick[i] !== null ? `.opt[data-j="${pick[i]}"]` : '#mq');
+  const go = deadline => { const tick = () => { const left = Math.round(deadline - now());
+      $('mclock').textContent = mmss(Math.max(0, left)); $('timer').classList.toggle('low', left <= 60); if (left <= 0) submit(true); }; tick(); every(tick, 1000); };
+  if (c.deadline) go(c.deadline); else api('start', { card: c.id }).then(r => { if (r.deadline) go(r.deadline); });
+}
+
+function choiceCard(card, c, s) {
+  // Readings whose labels are the options are the choice itself: one tap on the reading picks it.
+  const rd = c.readings || [], opts = c.options || [];
+  const asCards = rd.length && rd.length === opts.length && opts.every(o => rd.some(r => r.label === o));
+  const body = `<h2>${rich(c.prompt)}</h2>
+    ${asCards
+      ? `<div class="readings" id="choices" role="radiogroup" aria-label="Your choice">${rd.map(r => `<button type="button" class="reading" role="radio" aria-checked="false" data-v="${esc(r.label)}"><b>${esc(r.label)}</b><span class="rt">${rich(r.text)}</span></button>`).join('')}</div>`
+      : rd.map(r => `<div class="reading"><b>${esc(r.label)}</b><span class="rt">${rich(r.text)}</span></div>`).join('') +
+        `<div class="choices" id="choices" role="radiogroup" aria-label="Your choice">${opts.map(o => `<button class="choice" type="button" role="radio" aria-checked="false" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div>`}
+    ${c.why ? '<textarea class="answer" id="why" aria-label="Why" placeholder="Because…" style="min-height:96px;margin-top:14px"></textarea>' : ''}
+    <div class="row"><button class="btn" id="go" type="button" disabled>Send <span class="kbd">⌘↩</span></button></div>`;
+  card.innerHTML = withText(c, body);
+  const key = 'room-choice-' + c.id, saved = JSON.parse(store.get(key) || 'null') || {};
+  let chosen = saved.chosen || null;
+  const why = $('why'), go = $('go');
+  if (why) why.value = saved.why || '';
+  const picks = () => card.querySelectorAll('[role="radio"]');
+  const paint = () => picks().forEach(x => x.setAttribute('aria-checked', x.dataset.v === chosen));
+  const chk = () => { if (!go.classList.contains('sent')) go.disabled = s.submitted || !chosen; store.set(key, JSON.stringify({ chosen, why: why ? why.value : '' })); };
+  const send = async () => { if (go.disabled) return; lockAll(card); go.disabled = true;
+    if (!await deliver(c.id, { choice: chosen, why: why && why.value.trim() ? why.value.trim() : undefined })) { card.querySelectorAll('[role="radio"], textarea').forEach(x => { x.disabled = false; }); notSent(go, 'Retry'); return; }
+    sentOK(go); poll(); };
+  $('choices').onclick = e => { const b = e.target.closest('[role="radio"]'); if (!b || b.disabled) return; chosen = b.dataset.v; paint(); chk(); (why || go).focus({ preventScroll: true }); };
+  if (why) { why.addEventListener('input', chk); why.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) send(); }); }
+  go.onclick = send;
+  H.update = st => { if (st.submitted) { lockAll(card); sentOK(go); } };
+  paint(); chk();
+  if (s.submitted) H.update(s);
+  else (card.querySelector('[role="radio"][aria-checked="true"]') || card.querySelector('[role="radio"]')).focus({ preventScroll: true });
+}
+
+function closeCard(card, c, s) {
+  const body = `<h2>${rich(c.prompt)}</h2>
+    <textarea class="answer" id="retry" aria-label="Your answer"></textarea>
+    ${c.question === false ? '' : '<label class="field-label" for="q">A question a classmate could get wrong</label><textarea class="answer" id="q" style="min-height:96px"></textarea>'}
+    <div class="row"><button class="btn ghost" id="photoBtn" type="button">Add photo</button><div class="thumbs" id="thumbs"></div>
+      <span class="confirm" id="endWrap"><button class="btn" id="go" type="button" disabled>Hand in</button></span></div>`;
+  card.innerHTML = withText(c, body);
+  const r = $('retry'), q = $('q'), list = [], key = 'room-close-' + c.id;
+  const saved = JSON.parse(store.get(key) || 'null') || {}; r.value = saved.r || ''; if (q) q.value = saved.q || '';
+  const chk = () => { const b = $('go'); if (b) b.disabled = s.submitted || (!r.value.trim() && !list.length); store.set(key, JSON.stringify({ r: r.value, q: q ? q.value : '' })); };
+  r.addEventListener('input', chk); if (q) q.addEventListener('input', chk);
+  $('thumbs').addEventListener('change', chk); $('photoBtn').onclick = photos(card, $('thumbs'), list, c.id);
+  const finish = async () => {
+    lockAll(card);
+    if (await deliver(c.id, { retry: r.value.trim(), question: q ? q.value.trim() : '', photos: list })) return poll();
+    card.querySelectorAll('textarea, #photoBtn, .thumb').forEach(x => { x.disabled = false; });
+    $('endWrap').innerHTML = '<button class="btn warn" id="go" type="button">Retry</button>'; $('go').onclick = finish; notSent($('go'), 'Retry');
+  };
+  confirmStep($('endWrap'), 'Hand in', 'Hand in? This is the last answer of the block.', finish);
+  H.update = st => { if (st.submitted) { lockAll(card); $('endWrap').innerHTML = `<span class="done">${CHECK} Handed in</span>`; } };
+  if (s.submitted) H.update(s); else { chk(); r.focus({ preventScroll: true }); }
+}
+
+/* ---------- lesson: steps revealed one at a time beside a live picture ---------- */
+// Graph expressions: + - * / ^, implicit products (3x, 2(x+1)), sin x, pi, e; x or t is the variable. check_expr in roomstate.py validates the same grammar.
+const FUNCS = { sin: Math.sin, cos: Math.cos, tan: Math.tan, asin: Math.asin, acos: Math.acos, atan: Math.atan, sqrt: Math.sqrt, abs: Math.abs,
+  ln: Math.log, log: Math.log10, exp: Math.exp, floor: Math.floor, ceil: Math.ceil, sign: Math.sign, min: Math.min, max: Math.max };
+const NAMES = ['asin', 'acos', 'atan', 'sqrt', 'floor', 'ceil', 'sign', 'sin', 'cos', 'tan', 'abs', 'exp', 'log', 'min', 'max', 'ln', 'pi'];
+function compile(src) {
+  const s = String(src).replace(/−/g, '-').replace(/π/g, 'pi').replace(/[·×]/g, '*'), t = [];
+  for (let i = 0; i < s.length;) {
+    const ch = s[i], n = /^(\d+\.?\d*|\.\d+)/.exec(s.slice(i));
+    if (/\s/.test(ch)) i++;
+    else if (n) { t.push({ k: 'n', v: parseFloat(n[1]) }); i += n[1].length; }
+    else if ('+-*/^(),'.includes(ch)) { t.push({ k: ch }); i++; }
+    else if (/[a-zA-Z]/.test(ch)) { const w = NAMES.find(f => s.startsWith(f, i)) || ch; t.push({ k: 'id', v: w }); i += w.length; }
+    else throw new Error('unexpected ' + ch);
+  }
+  let p = 0;
+  const peek = () => t[p] && t[p].k, eat = k => { if (peek() !== k) throw new Error('expected ' + k); p++; };
+  const expr = () => { let a = term(); while (peek() === '+' || peek() === '-') { const op = t[p++].k, l = a, r = term(); a = op === '+' ? e => l(e) + r(e) : e => l(e) - r(e); } return a; };
+  const term = () => { let a = unary(); for (;;) { const k = peek();
+    if (k === '*' || k === '/') { p++; const l = a, r = unary(); a = k === '*' ? e => l(e) * r(e) : e => l(e) / r(e); }
+    else if (k === 'n' || k === 'id' || k === '(') { const l = a, r = power(); a = e => l(e) * r(e); }
+    else return a; } };
+  const unary = () => { const k = peek(); if (k === '-' || k === '+') { p++; const r = unary(); return k === '-' ? e => -r(e) : r; } return power(); };
+  const power = () => { const b = atom(); if (peek() === '^') { p++; const x = unary(); return e => Math.pow(b(e), x(e)); } return b; };
+  const atom = () => {
+    const x = t[p++]; if (!x) throw new Error('ends too soon');
+    if (x.k === 'n') return () => x.v;
+    if (x.k === '(') { const a = expr(); eat(')'); return a; }
+    if (x.k !== 'id') throw new Error('unexpected ' + x.k);
+    if (x.v === 'pi') return () => Math.PI;
+    const f = FUNCS[x.v];
+    if (f) { if (peek() === '(') { p++; const args = [expr()]; while (peek() === ',') { p++; args.push(expr()); } eat(')'); return e => f(...args.map(a => a(e))); }
+             const a = power(); return e => f(a(e)); }
+    if (x.v === 'e') return () => Math.E;
+    return e => (x.v in e ? e[x.v] : NaN);
+  };
+  const f = expr(); if (p < t.length) throw new Error('unexpected ' + (t[p].v || t[p].k));
+  return f;
+}
+const COMPILED = new Map();
+const fnOf = src => { if (!COMPILED.has(src)) { let f; try { f = compile(src); } catch (e) { f = () => NaN; } COMPILED.set(src, f); } return COMPILED.get(src); };
+const arr = v => v == null ? [] : Array.isArray(v) ? v : [v];
+const COLORS = { subject: 'var(--subject)', amber: 'var(--amber)', good: 'var(--good)', red: 'var(--red)', ink: 'var(--text-2)', muted: 'var(--text-3)' };
+const ORDER = ['subject', 'amber', 'good', 'red'];
+const colorOf = (c, i = 0) => /^#[0-9a-f]{3,8}$/i.test(c || '') ? c : Object.hasOwn(COLORS, c) ? COLORS[c] : COLORS[ORDER[i % ORDER.length]];
+const fmtN = (v, d = 2) => !isFinite(v) ? '–' : String(Math.abs(v) < 1e-9 ? 0 : +v.toFixed(d)).replace('-', '−');
+const niceStep = (span, n) => { const raw = span / Math.max(1, n), p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3 ? 2 : m < 7 ? 5 : 10) * p; };
+const simpson = (f, a, b, abs) => { const n = 240, h = (b - a) / n; let s = 0;
+  for (let i = 0; i <= n; i++) { let y = f(a + i * h); if (!isFinite(y)) y = 0; if (abs) y = Math.abs(y); s += y * (i === 0 || i === n ? 1 : i % 2 ? 4 : 2); }
+  return s * h / 3; };
+const visOf = st => st && (st.graph && Object.keys(st.graph).length ? 'graph' : st.numberline ? 'numberline' : st.table ? 'table' : st.flow ? 'flow' : mediaKind(st) || (Array.isArray(st.lines) && st.lines.length ? 'lines' : null));
+const lessonHasVis = c => (c.steps || []).some(visOf) || !!visOf(c);
+let gid = 0;
+
+// A function graph drawn at the box's real width, so 12px text stays 12px on a phone. o: { drawn: curves already on screen, SL: slider values by name, save }.
+function graphView(box, g, o, fresh) {
+  const sl = g.slider && g.slider.name ? g.slider : null, E = {}, id = 'g' + (++gid);
+  const fns = [...arr(g.fn), ...arr(g.fns)].map(f => typeof f === 'string' ? { fn: f } : f || {});
+  const tFree = !(sl && sl.name === 't');
+  const ev = (src, x) => { E.x = x; if (tFree) E.t = x; const y = fnOf(String(src))(E); return typeof y === 'number' ? y : NaN; };
+  const V = v => typeof v === 'number' ? v : v == null ? NaN : ev(v, NaN);
+  const srcOf = r => typeof r === 'number' ? (fns[r] || {}).fn : r;
+  const stepOf = () => { const st = +sl.step; return st > 0 ? st : (sl.max - sl.min) / 200; };
+  if (sl) { const kept = o.SL[sl.name], start = +sl.value; E[sl.name] = kept != null && kept >= sl.min && kept <= sl.max ? kept : start >= sl.min && start <= sl.max ? start : +sl.min; }
+  const [x0, x1] = g.x && g.x.length === 2 ? g.x.map(Number) : [-5, 5];
+  // y range: given, or read off what's drawn at the starting slider value, ignoring spikes; fixed after that so the axes never jump
+  const [y0, y1] = g.y && g.y.length === 2 ? g.y.map(Number) : (() => {
+    const ys = [];
+    fns.forEach(f => { if (f.fn) for (let i = 0; i <= 200; i++) ys.push(ev(f.fn, x0 + (x1 - x0) * i / 200)); (f.points || []).forEach(q => ys.push(+q[1])); });
+    arr(g.points).forEach(q => { if (Array.isArray(q.at)) ys.push(V(q.at[1])); });
+    const fin = ys.filter(isFinite).sort((a, b) => a - b); if (!fin.length) return [-5, 5];
+    let lo = fin[Math.floor(fin.length * .02)], hi = fin[Math.max(0, Math.ceil(fin.length * .98) - 1)];
+    if (lo > 0 && lo < hi - lo) lo = 0; if (hi < 0 && -hi < hi - lo) hi = 0;
+    if (hi - lo < 1e-9) { lo -= 1; hi += 1; }
+    const pad = (hi - lo) * .1; return [lo - pad, hi + pad];
+  })();
+  const drag = sl && sl.drag !== false && sl.min >= x0 && sl.max <= x1;
+  box.innerHTML = `<svg class="gsvg ${drag ? 'drag' : ''}" role="img" aria-label="${esc(g.alt || 'Graph')}"></svg>` + (sl || g.readout ? `<div class="gctl">
+      ${sl ? `<label class="slide"><span>${esc(sl.label || sl.name)} = <b></b></span><input type="range" min="${+sl.min}" max="${+sl.max}" step="${stepOf()}" value="${+E[sl.name]}"></label>` : ''}
+      ${g.readout ? `<div class="readouts">${arr(g.readout).map(r => `<div class="ro"><small>${rich(r.label || '')}</small><b></b></div>`).join('')}</div>` : ''}</div>` : '');
+  math(box);
+  const svg = box.querySelector('svg'), input = box.querySelector('.slide input'), outB = box.querySelector('.slide b');
+  let geo = null;
+  const draw = anim => {
+    const W = Math.max(260, Math.round(box.clientWidth)), H = Math.round(Math.min(420, Math.max(220, W * .62)));
+    const m = { l: 40 + (g.ylabel ? 16 : 0), r: 14, t: 14, b: 26 + (g.xlabel ? 16 : 0) }, pw = W - m.l - m.r, ph = H - m.t - m.b;
+    const sx = x => m.l + (x - x0) / (x1 - x0) * pw, sy = y => m.t + (y1 - y) / (y1 - y0) * ph, P = (x, y) => `${sx(x).toFixed(1)},${sy(y).toFixed(1)}`;
+    const span = y1 - y0, clampY = y => Math.max(y0 - span, Math.min(y1 + span, y));
+    geo = { m, pw, W };
+    let back = '', body = '', top = '';
+    const xs = niceStep(x1 - x0, pw / 70), ys = niceStep(span, ph / 44);
+    for (let k = Math.ceil(x0 / xs - 1e-9); k * xs <= x1 + 1e-9; k++) { const v = k * xs; back += `<line class="g-grid" x1="${sx(v)}" x2="${sx(v)}" y1="${m.t}" y2="${m.t + ph}"/><text class="g-tick" x="${sx(v)}" y="${m.t + ph + 16}" text-anchor="middle">${fmtN(v, 3)}</text>`; }
+    for (let k = Math.ceil(y0 / ys - 1e-9); k * ys <= y1 + 1e-9; k++) { const v = k * ys; back += `<line class="g-grid" x1="${m.l}" x2="${m.l + pw}" y1="${sy(v)}" y2="${sy(v)}"/><text class="g-tick" x="${m.l - 7}" y="${sy(v) + 4}" text-anchor="end">${fmtN(v, 3)}</text>`; }
+    if (y0 <= 0 && y1 >= 0) back += `<line class="g-axis" x1="${m.l}" x2="${m.l + pw}" y1="${sy(0)}" y2="${sy(0)}"/>`;
+    if (x0 <= 0 && x1 >= 0) back += `<line class="g-axis" x1="${sx(0)}" x2="${sx(0)}" y1="${m.t}" y2="${m.t + ph}"/>`;
+    if (g.xlabel) back += `<text class="g-lab" x="${m.l + pw}" y="${H - 3}" text-anchor="end">${esc(g.xlabel)}</text>`;
+    if (g.ylabel) back += `<text class="g-lab" transform="translate(12 ${m.t}) rotate(-90)" text-anchor="end">${esc(g.ylabel)}</text>`;
+    const fade = anim ? 'fade' : '';
+    // area between a curve and the axis: above in its colour, below in amber, so signed area reads at a glance
+    arr(g.shade).forEach(s => {
+      const src = srcOf(s.fn ?? 0); if (!src) return;
+      let a = V(s.from ?? x0), b = V(s.to ?? x1); if (!isFinite(a) || !isFinite(b)) return; if (a > b) [a, b] = [b, a];
+      a = Math.max(a, x0); b = Math.min(b, x1); if (b - a < 1e-9) return;
+      const pts = []; for (let i = 0; i <= 200; i++) { const x = a + (b - a) * i / 200, y = ev(src, x); pts.push([x, isFinite(y) ? y : 0]); }
+      const poly = f => `M${P(a, 0)}` + pts.map(([x, y]) => 'L' + P(x, f(y))).join('') + `L${P(b, 0)}Z`;
+      const i = typeof (s.fn ?? 0) === 'number' ? (s.fn ?? 0) : -1, own = i >= 0 ? colorOf((fns[i] || {}).color, i) : colorOf('subject');   // the curve's own colour
+      const up = s.color ? colorOf(s.color) : own, down = s.below ? colorOf(s.below) : s.color ? up : own === colorOf('amber') ? colorOf('subject') : colorOf('amber');
+      body += `<path class="g-shade ${fade}" style="--c:${up}" d="${poly(y => Math.max(0, Math.min(y, y1)))}"/>`
+            + `<path class="g-shade ${fade}" style="--c:${down}" d="${poly(y => Math.min(0, Math.max(y, y0)))}"/>`;
+    });
+    arr(g.vlines).forEach(l => { const x = V(l.x); if (!isFinite(x)) return; body += `<line class="g-ref" x1="${sx(x)}" x2="${sx(x)}" y1="${m.t}" y2="${m.t + ph}"/>`; if (l.label) top += `<text class="g-tick" x="${sx(x) + 5}" y="${m.t + 11}">${esc(l.label)}</text>`; });
+    arr(g.hlines).forEach(l => { const y = V(l.y); if (!isFinite(y)) return; body += `<line class="g-ref" x1="${m.l}" x2="${m.l + pw}" y1="${sy(y)}" y2="${sy(y)}"/>`; if (l.label) top += `<text class="g-tick" x="${m.l + pw - 4}" y="${sy(y) - 6}" text-anchor="end">${esc(l.label)}</text>`; });
+    const keys = new Set();
+    fns.forEach((f, i) => {
+      const col = colorOf(f.color, i), key = f.fn || JSON.stringify(f.points); keys.add(key);
+      let d = '', end = null;
+      if (f.fn) {
+        const a = f.domain ? Math.max(x0, V(f.domain[0])) : x0, b = f.domain ? Math.min(x1, V(f.domain[1])) : x1, n = Math.min(800, Math.round(pw * 1.2));
+        let pen = false, py = null;
+        for (let k = 0; k <= n; k++) {
+          const x = a + (b - a) * k / n, y = ev(f.fn, x);
+          if (!isFinite(y)) { pen = false; py = null; continue; }
+          if (py !== null && Math.abs(y - py) > span * 2) pen = false;   // an asymptote: lift the pen
+          d += (pen ? 'L' : 'M') + P(x, clampY(y)); pen = true; py = y;
+          if (y >= y0 && y <= y1) end = [x, y];
+        }
+      } else if (f.points) {
+        d = f.points.map((q, k) => (k ? 'L' : 'M') + P(+q[0], +q[1])).join('');
+        if (f.dots !== false) f.points.forEach(q => { top += `<circle class="g-dot" style="--c:${col}" cx="${sx(+q[0])}" cy="${sy(+q[1])}" r="3.5"/>`; });
+        const q = f.points[f.points.length - 1]; end = [+q[0], +q[1]];
+        if (f.join === false) d = '';
+      }
+      const isNew = anim && !o.drawn.has(key);
+      body += `<path class="g-curve ${f.dash ? 'dash' : ''} ${isNew ? (f.dash ? 'fade' : 'draw') : ''}" style="--c:${col}" d="${d}" ${isNew && !f.dash ? 'pathLength="1"' : ''}/>`;
+      if (f.label && end) top += `<text class="g-name ${isNew ? 'fade' : ''}" style="--c:${col}" x="${sx(end[0]) - 4}" y="${sy(end[1]) - 9}" text-anchor="end">${esc(f.label)}</text>`;
+    });
+    const line = (xa, ya, mm, col, cls = '') => { const ya0 = ya + mm * (x0 - xa), ya1 = ya + mm * (x1 - xa); body += `<line class="g-line ${cls}" style="--c:${col}" x1="${sx(x0)}" y1="${sy(clampY(ya0))}" x2="${sx(x1)}" y2="${sy(clampY(ya1))}"/>`; };
+    arr(g.tangent).forEach(tn => {
+      const src = srcOf(tn.fn ?? 0), a = V(tn.at); if (!src || !isFinite(a)) return;
+      const h = (x1 - x0) * 1e-4, ya = ev(src, a), mm = (ev(src, a + h) - ev(src, a - h)) / (2 * h); if (!isFinite(ya) || !isFinite(mm)) return;
+      line(a, ya, mm, colorOf(tn.color || 'ink'), fade);
+      top += `<circle class="g-dot" style="--c:${colorOf(fns[tn.fn ?? 0] && typeof tn.fn !== 'string' ? fns[tn.fn ?? 0].color : null, typeof tn.fn === 'number' ? tn.fn : 0)}" cx="${sx(a)}" cy="${sy(ya)}" r="5"/>`;
+    });
+    arr(g.secant).forEach(sc => {
+      const src = srcOf(sc.fn ?? 0), a = V(sc.from), b = V(sc.to); if (!src || !isFinite(a) || !isFinite(b) || a === b) return;
+      const ya = ev(src, a), yb = ev(src, b); if (!isFinite(ya) || !isFinite(yb)) return;
+      line(a, ya, (yb - ya) / (b - a), colorOf(sc.color || 'ink'), fade);
+      top += `<circle class="g-dot" style="--c:${colorOf(sc.color || 'ink')}" cx="${sx(a)}" cy="${sy(ya)}" r="4.5"/><circle class="g-dot" style="--c:${colorOf(sc.color || 'ink')}" cx="${sx(b)}" cy="${sy(yb)}" r="4.5"/>`;
+    });
+    arr(g.points).forEach(q => {
+      const x = V(q.on != null ? q.x : (q.at || [])[0]), y = q.on != null ? ev(srcOf(q.on), x) : V((q.at || [])[1]);
+      if (!isFinite(x) || !isFinite(y) || x < x0 || x > x1 || y < y0 || y > y1) return;
+      const col = colorOf(q.color || 'subject');
+      top += `<circle class="g-dot" style="--c:${col}" cx="${sx(x)}" cy="${sy(y)}" r="5"/>`;
+      if (q.label) top += `<text class="g-name" style="--c:${col}" x="${sx(x) + 9}" y="${sy(y) - 9}">${esc(q.label)}</text>`;
+    });
+    if (drag) { const x = sx(E[sl.name]), ky = y0 <= 0 && y1 >= 0 ? sy(0) : m.t + ph; top += `<line class="g-guide" x1="${x}" x2="${x}" y1="${m.t}" y2="${m.t + ph}"/><circle class="g-knob" cx="${x}" cy="${ky}" r="7.5"/>`; }
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('width', W); svg.setAttribute('height', H);
+    svg.innerHTML = `<defs><clipPath id="${id}"><rect x="${m.l}" y="${m.t - 1}" width="${pw}" height="${ph + 2}"/></clipPath></defs>${back}<g clip-path="url(#${id})">${body}</g>${top}`;
+    if (anim) o.drawn = keys;
+    readouts();
+  };
+  const readouts = () => {
+    if (sl) { outB.textContent = fmtN(E[sl.name], 2); input.style.setProperty('--p', `${(E[sl.name] - sl.min) / (sl.max - sl.min) * 100}%`); }
+    const bs = box.querySelectorAll('.ro b');
+    arr(g.readout).forEach((r, i) => {
+      let v = NaN;
+      if (r.area) { const src = srcOf(r.area.fn ?? 0), a = V(r.area.from ?? x0), b = V(r.area.to ?? x1); if (src && isFinite(a) && isFinite(b)) v = simpson(x => ev(src, x), a, b, r.area.abs); if (r.area.abs) v = Math.abs(v); }
+      else if (r.slope) { const src = srcOf(r.slope.fn ?? 0), a = V(r.slope.at), h = (x1 - x0) * 1e-4; if (src) v = (ev(src, a + h) - ev(src, a - h)) / (2 * h); }
+      else if (r.value != null) v = V(r.value);
+      if (bs[i]) bs[i].textContent = fmtN(v, r.digits ?? 2);
+    });
+  };
+  const set = v => {
+    const st = stepOf();
+    v = Math.min(sl.max, Math.max(sl.min, sl.min + Math.round((v - sl.min) / st) * st)); v = +v.toFixed(6);
+    if (v === E[sl.name]) return;
+    E[sl.name] = v; o.SL[sl.name] = v; input.value = v; draw(false); o.save();
+  };
+  if (input) input.addEventListener('input', () => set(+input.value));
+  if (drag) {   // drag anywhere on the plot: the slider follows the pointer, 1:1
+    const fromPointer = e => { const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) * (geo.W / r.width); set(x0 + (px - geo.m.l) / geo.pw * (x1 - x0)); };
+    svg.addEventListener('pointerdown', e => { if (e.button) return; svg.setPointerCapture(e.pointerId); fromPointer(e); });
+    svg.addEventListener('pointermove', e => { if (svg.hasPointerCapture(e.pointerId)) fromPointer(e); });
+  }
+  draw(fresh);
+  let lastW = box.clientWidth;
+  const ro = new ResizeObserver(() => { if (Math.abs(box.clientWidth - lastW) > 1) { lastW = box.clientWidth; draw(false); } }); ro.observe(box);
+  return { destroy: () => ro.disconnect() };
+}
+
+// A number line: ticks, points (open or closed), shaded intervals for sign charts, and arcs for moves, with the net change underneath.
+function lineView(box, nl) {
+  box.innerHTML = `<svg class="gsvg" role="img" aria-label="${esc(nl.alt || 'Number line')}"></svg>`;
+  const svg = box.firstElementChild, V = v => typeof v === 'number' ? v : fnOf(String(v))({});
+  const [a, b] = nl.range.map(Number), moves = arr(nl.moves), pts = arr(nl.points), bands = arr(nl.intervals);
+  const draw = () => {
+    const W = Math.max(260, Math.round(box.clientWidth)), l = 22, r = 22, sx = x => l + (x - a) / (b - a) * (W - l - r);
+    // moves are stacked arrows read top to bottom in time order, so back-and-forth trips over the same stretch stay apart
+    const labelled = bands.length || pts.some(q => q.label), base = labelled ? 38 : 24, rowY = i => ly - base - 24 * (moves.length - 1 - i);
+    const above = moves.length ? base + 24 * (moves.length - 1) + 18 : labelled ? 26 : 0;
+    const ly = 10 + above, H = ly + (nl.net && moves.length ? 66 : 30);
+    let out = `<line class="n-line" x1="${l - 12}" x2="${W - r + 12}" y1="${ly}" y2="${ly}"/>`;
+    let st = +nl.step; if (!(st > 0) || (b - a) / st > 400) st = niceStep(b - a, (W - l - r) / 60);
+    for (let k = Math.ceil(a / st - 1e-9); k * st <= b + 1e-9; k++) { const x = sx(k * st); out += `<line class="n-line" x1="${x}" x2="${x}" y1="${ly - 5}" y2="${ly + 5}"/><text class="g-tick" x="${x}" y="${ly + 21}" text-anchor="middle">${fmtN(k * st, 3)}</text>`; }
+    bands.forEach(iv => { const p = sx(V(iv.from)), q = sx(V(iv.to)), col = colorOf(iv.color);
+      out += `<rect class="n-band" style="--c:${col}" x="${Math.min(p, q)}" y="${ly - 10}" width="${Math.abs(q - p)}" height="5" rx="2.5"/>`;
+      if (iv.label) out += `<text class="g-name" style="--c:${col}" x="${(p + q) / 2}" y="${ly - 17}" text-anchor="middle">${esc(iv.label)}</text>`; });
+    const head = (x, y, ux, uy, col) => `<path class="n-head" style="--c:${col}" d="M${x},${y}L${x - 9 * ux - 4.5 * uy},${y - 9 * uy + 4.5 * ux}L${x - 9 * ux + 4.5 * uy},${y - 9 * uy - 4.5 * ux}Z"/>`;
+    moves.forEach((mv, i) => {
+      const p = sx(V(mv.from)), q = sx(V(mv.to)), y = rowY(i), col = colorOf(mv.color), dir = q >= p ? 1 : -1, next = moves[i + 1];
+      out += `<g class="fade" style="animation-delay:${i * 200}ms">`
+           + (next ? `<line class="g-ref" x1="${q}" x2="${q}" y1="${y + 4}" y2="${rowY(i + 1) - 4}"/>` : `<line class="g-ref" x1="${q}" x2="${q}" y1="${y + 4}" y2="${ly - 6}"/>`)
+           + `<circle class="g-dot" style="--c:${col}" cx="${p}" cy="${y}" r="3.5"/><line class="n-move" style="--c:${col}" x1="${p}" x2="${q - dir * 7}" y1="${y}" y2="${y}"/>${Math.abs(q - p) > 2 ? head(q, y, dir, 0, col) : ''}`
+           + `<text class="g-name" style="--c:${col}" x="${(p + q) / 2}" y="${y - 7}" text-anchor="middle">${esc(mv.label ?? fmtN(Math.abs(V(mv.to) - V(mv.from))))}</text></g>`;
+    });
+    pts.forEach(q => { const x = sx(V(q.at)), col = colorOf(q.color);
+      out += `<circle class="${q.open ? 'n-open' : 'g-dot'}" style="--c:${col}" cx="${x}" cy="${ly}" r="5.5"/>`;
+      if (q.label) out += `<text class="g-name" style="--c:${col}" x="${x}" y="${ly - 14}" text-anchor="middle">${esc(q.label)}</text>`; });
+    if (nl.net && moves.length) {
+      const p = sx(V(moves[0].from)), q = sx(V(moves[moves.length - 1].to)), y = ly + 40, col = colorOf('amber'), dir = q >= p ? 1 : -1;
+      const net = V(moves[moves.length - 1].to) - V(moves[0].from);
+      out += `<g class="fade" style="animation-delay:${moves.length * 180 + 120}ms"><line class="n-move" style="--c:${col}" x1="${p}" x2="${q - dir * 6}" y1="${y}" y2="${y}"/>${Math.abs(q - p) > 2 ? head(q, y, dir, 0, col) : ''}`
+           + `<text class="g-name" style="--c:${col}" x="${(p + q) / 2}" y="${y + 18}" text-anchor="middle">${esc(typeof nl.net === 'string' ? nl.net : 'net ' + fmtN(net))}</text></g>`;
+    }
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('width', W); svg.setAttribute('height', H); svg.innerHTML = out;
+  };
+  draw();
+  let lastW = box.clientWidth;
+  const ro = new ResizeObserver(() => { if (Math.abs(box.clientWidth - lastW) > 1) { lastW = box.clientWidth; draw(); svg.querySelectorAll('.fade').forEach(x => { x.style.animation = 'none'; }); } }); ro.observe(box);
+  return { destroy: () => ro.disconnect() };
+}
+const tableHTML = tb => { const marks = new Set(arr(tb.mark).map(Number));
+  return `<table class="ltable">${Array.isArray(tb.head) ? `<thead><tr>${tb.head.map(h => `<th>${rich(h)}</th>`).join('')}</tr></thead>` : ''}<tbody>${tb.rows.map((r, i) => `<tr class="${marks.has(i + 1) ? 'hl' : ''}">${r.map(v => `<td>${rich(String(v ?? ''))}</td>`).join('')}</tr>`).join('')}</tbody></table>`; };
+const flowHTML = (fl, zero) => { const items = Array.isArray(fl) ? fl : fl.items || [], raw = Array.isArray(fl) ? null : fl.at;
+  const at = raw == null ? 0 : typeof raw === 'string' && isNaN(+raw) ? items.indexOf(raw) + 1 : +raw + (zero ? 1 : 0);
+  return `<ol class="flow">${items.map((it, i) => `<li class="${i + 1 === at ? 'on' : i + 1 < at ? 'past' : ''}"${i + 1 === at ? ' aria-current="step"' : ''}>${rich(it)}</li>`).join('')}</ol>`; };
+
+/* ---------- review: the learner's own text on the page with the tutor's notes; the card holds only what is asked about it ---------- */
+function reviewCard(card, c, s) {
+  const ask = !!c.prompt;
+  card.innerHTML = ask ? `<h2>${rich(c.prompt)}</h2><textarea class="answer" id="ans" aria-label="Your answer"></textarea>
+      <div class="row"><button class="btn" id="go" type="button" disabled>Send <span class="kbd">⌘↩</span></button></div>`
+    : '<div class="row rask"><button class="btn" id="go" type="button">Got it</button></div>';
+  const go = $('go'), ans = $('ans'), key = 'room-ans-' + c.id;
+  if (ans) ans.value = store.get(key) ?? (c.prefill || '');
+  const chk = () => { if (!go.classList.contains('sent')) go.disabled = !!S.submitted || (!!ans && !ans.value.trim()); };
+  const send = async () => {
+    if (go.disabled) return; go.disabled = true; if (ans) ans.disabled = true;
+    if (!await deliver(c.id, ans ? { answer: ans.value.trim() } : { done: true })) { if (ans) ans.disabled = false; notSent(go, ans ? 'Retry' : 'Got it'); return; }
+    sentOK(go); lockAll(card); poll();
+  };
+  if (ans) { ans.addEventListener('input', () => { store.set(key, ans.value); chk(); }); ans.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) send(); }); }
+  go.onclick = send;
+  H.update = st => { if (st.submitted) { lockAll(card); sentOK(go); } };
+  if (s.submitted) H.update(s); else { chk(); if (ans) ans.focus({ preventScroll: true }); }
+}
+
+// Notes: each quote becomes a highlight; one with a comment gets a number, and the comment sits in the margin level with it
+// (review card) or in a list under the passage (any card with lines). The match is the server's: whitespace runs and quote styles are equal.
+let noteSig = '';
+const TONES = ['subject', 'amber', 'good', 'red'];
+const toneOf = x => TONES.includes(x.tone) ? x.tone : 'subject';
+const quoteRe = q => new RegExp(String(q).trim().split(/\s+/).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/['’‘]/g, "['’‘]").replace(/["“”]/g, '["“”]')).join('\\s+'), 'g');
+function textMap(root) {
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentElement.closest('.n, .nb, .pnotes, cite') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+  let text = '', blk = null; const nodes = [];
+  while (w.nextNode()) { const n = w.currentNode, b = n.parentElement.closest('p, .ln, li'); if (blk && b !== blk) text += '\n'; blk = b; nodes.push([n, text.length]); text += n.data; }
+  return { text, nodes };
+}
+function markQuote(root, x, i) {
+  const { text, nodes } = textMap(root), re = quoteRe(x.quote), want = Math.max(1, parseInt(x.n) || 1); let m = null;
+  for (let k = 0; k < want; k++) { m = re.exec(text); if (!m) return []; }
+  const s = m.index, e = s + m[0].length, out = [];
+  nodes.forEach(([n, at]) => {
+    const a = Math.max(s, at), b = Math.min(e, at + n.data.length); if (a >= b) return;
+    const r = document.createRange(); r.setStart(n, a - at); r.setEnd(n, b - at);
+    const mk = document.createElement('mark'); mk.className = `nt t-${toneOf(x)}`; mk.dataset.k = i; r.surroundContents(mk); out.push(mk);
+  });
+  return out;
+}
+function paintNotes(card, c, fresh) {
+  const host = $('source'), root = host.querySelector('.rtext') || host.querySelector('.poem'); if (!root) return;
+  root.querySelectorAll('.nb').forEach(x => x.remove());
+  root.querySelectorAll('mark.nt').forEach(mk => mk.replaceWith(...mk.childNodes)); root.normalize();
+  let box = host.querySelector('.rnotes') || root.querySelector('.pnotes');
+  if (!box) { box = document.createElement('ol'); box.className = 'pnotes'; box.setAttribute('aria-label', 'Notes'); root.appendChild(box); }
+  const marked = []; let first = null;
+  arr(c.notes).forEach((x, i) => {
+    const mks = markQuote(root, x, i); if (!mks.length) return;
+    if (fresh && fresh.has(i)) { mks.forEach(mk => mk.classList.add('new')); first = first || mks[0]; }
+    if (x.note) marked.push({ x, i, mks });
+  });
+  // numbered in reading order, whatever order the tutor added them in
+  marked.sort((a, b) => a.mks[0].compareDocumentPosition(b.mks[0]) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
+  box.innerHTML = marked.map(({ x, i }, n) => {
+    const nb = document.createElement('sup'); nb.className = `nb t-${toneOf(x)}`; nb.dataset.k = i; nb.textContent = n + 1;
+    marked[n].mks[marked[n].mks.length - 1].after(nb);
+    return `<li class="t-${toneOf(x)}${fresh && fresh.has(i) ? ' new' : ''}" data-k="${i}"><b>${n + 1}</b><span>${rich(x.note)}</span></li>`;
+  }).join(''); math(box);
+  layoutNotes();
+  if (!host.dataset.np) {   // a highlight and its note light up together
+    host.dataset.np = 1;
+    const lit = (k, on) => host.querySelectorAll(`mark.nt[data-k="${k}"], .rnotes li[data-k="${k}"], .pnotes li[data-k="${k}"]`).forEach(x => x.classList.toggle('on', on));
+    host.addEventListener('pointerover', e => { const t = e.target.closest('mark.nt, .nb, .rnotes li, .pnotes li'); if (t) lit(t.dataset.k, true); });
+    host.addEventListener('pointerout', e => { const t = e.target.closest('mark.nt, .nb, .rnotes li, .pnotes li'); if (t) lit(t.dataset.k, false); });
+  }
+  showInLeaf(first, true);
+}
+function layoutNotes() {
+  const host = $('source'), box = host.querySelector('.rnotes'); if (!box || !box.children.length) return;
+  const lis = [...box.children];
+  if (getComputedStyle(lis[0]).position !== 'absolute') { lis.forEach(li => { li.style.top = ''; }); box.style.minHeight = ''; return; }
+  const top0 = box.getBoundingClientRect().top; let y = 0;
+  lis.forEach(li => {
+    const mk = host.querySelector(`mark.nt[data-k="${li.dataset.k}"]`);
+    const t = Math.max(mk ? mk.getBoundingClientRect().top - top0 - 6 : y, y);
+    li.style.top = t + 'px'; y = t + li.offsetHeight + 10;
+  });
+  box.style.minHeight = y + 'px';
+}
+new ResizeObserver(() => { layoutNotes(); pad(); }).observe($('source'));
+
+function lessonCard(card, c, s) {
+  const steps = (c.steps || []).map(st => typeof st === 'string' ? { text: st } : st), last = steps.length - 1, k = c.check || null, opts = (k && k.options) || [];
+  const flowZero = steps.some(st => st.flow && !Array.isArray(st.flow) && st.flow.at === 0);   // a lesson that counted its flow from 0
+  const hasVis = lessonHasVis(c), key = 'room-lesson-' + c.id, saved = JSON.parse(store.get(key) || 'null') || {};
+  let seen = s.submitted ? last : Math.min(last, saved.seen || 0), at = Math.min(seen, saved.at ?? seen), chosen = saved.chosen || null, visFrom = -2, view = null;
+  const save = () => store.set(key, JSON.stringify({ seen, at, chosen, sl: G.SL, ans: $('lans') ? $('lans').value : saved.ans }));
+  const G = { drawn: new Set(), SL: saved.sl || {}, save };
+  card.innerHTML = `
+    <div class="segs" id="segs" role="tablist" aria-label="Steps">${steps.map((_, i) => `<button type="button" role="tab" data-i="${i}" aria-label="Step ${i + 1}"><i></i></button>`).join('')}</div>
+    ${c.title ? `<h2>${rich(c.title)}</h2>` : ''}
+    <div>
+      <div><ol class="steps" id="steps"></ol>
+        <div class="row lnav"><button class="btn ghost" id="back" type="button">Back</button><button class="btn" id="next" type="button">Next <span class="kbd">space</span></button><span class="lcount" id="lcount"></span></div>
+        <div id="check"></div></div>
+    </div>`;
+  const list = $('steps'), vis = $('vis');
+  const lock = () => { lockAll(card); card.querySelectorAll('.slide input').forEach(x => { x.disabled = false; }); };   // the answer locks, the picture stays explorable
+  const addStep = (i, enter) => { const li = document.createElement('li'); li.className = 'step' + (enter ? ' enter' : ''); li.dataset.i = i; li.innerHTML = rich(steps[i].text || ''); list.appendChild(li); math(li); return li; };
+  for (let i = 0; i <= seen; i++) addStep(i, false);
+  // the picture for step i is the latest one at or before it, so a words-only step keeps the last picture up
+  const showVis = i => {
+    if (!vis) return;
+    let j = i; while (j >= 0 && !visOf(steps[j])) j--;
+    if (j === visFrom) return;
+    vis.hidden = j < 0 && !visOf(c);
+    const st = j >= 0 ? steps[j] : c, kind = visOf(st), keep = view && view.kind === 'graph' && kind === 'graph';
+    vis.classList.toggle('bleed', BLEED.includes(kind)); vis.classList.toggle('wide', kind === 'image' || kind === 'pdf');
+    visFrom = j; if (view && view.destroy) view.destroy();
+    vis.innerHTML = `<div class="vis ${keep ? '' : 'swap'}"></div>`;
+    const box = vis.firstElementChild;
+    if (kind === 'graph') view = graphView(box, st.graph, G, true);
+    else if (kind === 'numberline') view = lineView(box, st.numberline);
+    else if (MEDIA.includes(kind)) view = mediaView(box, st[kind], kind);
+    else if (!kind) view = {};
+    else { box.innerHTML = kind === 'table' ? tableHTML(st.table) : kind === 'flow' ? flowHTML(st.flow, flowZero) : poemHTML(st); math(box); view = {}; }
+    view.kind = kind;
+    if (painted) showInLeaf(vis, true);
+  };
+  let painted = false;
+  const paint = () => {
+    list.querySelectorAll('.step').forEach(li => { const now = +li.dataset.i === at; li.classList.toggle('now', now); li.tabIndex = now ? -1 : 0; li.setAttribute('aria-current', now ? 'step' : 'false'); });
+    $('segs').querySelectorAll('button').forEach((b, i) => { b.classList.toggle('seen', i <= seen); b.disabled = i > seen; b.setAttribute('aria-selected', i === at); });
+    $('back').disabled = at === 0; $('next').hidden = at >= last; $('lcount').textContent = `${at + 1} / ${steps.length}`;
+    showVis(at);
+  };
+  const showCheck = () => {
+    const box = $('check'); if (box.firstChild) return;
+    box.innerHTML = k ? `<div class="lcheck"><h2>${rich(k.prompt)}</h2>
+        ${opts.length ? `<div class="choices" id="lch" role="radiogroup" aria-label="Your answer">${opts.map(o => `<button class="choice" type="button" role="radio" aria-checked="${String(o) === chosen}" data-v="${esc(o)}">${rich(o)}</button>`).join('')}</div>` : ''}
+        ${!opts.length || k.why ? `<textarea class="answer" id="lans" aria-label="${opts.length ? 'Why' : 'Your answer'}" ${opts.length ? 'style="min-height:88px;margin-top:12px"' : ''}></textarea>` : ''}
+        <div class="row"><button class="btn" id="go" type="button" disabled>Send <span class="kbd">⌘↩</span></button></div></div>`
+      : '<div class="row"><button class="btn" id="go" type="button">Got it</button></div>';
+    math(box);
+    const go = $('go'), ans = $('lans');
+    if (ans) ans.value = saved.ans || '';
+    const chk = () => { if (go.classList.contains('sent')) return;
+      go.disabled = !!S.submitted || (!!k && ((opts.length && !chosen) || (ans && !ans.value.trim()))); };
+    const send = async () => {
+      if (go.disabled) return; go.disabled = true; lock();
+      const data = { steps: steps.length }; if (opts.length) data.choice = chosen; if (ans) data[opts.length ? 'why' : 'answer'] = ans.value.trim(); if (!k) data.done = true;
+      if (!await deliver(c.id, data)) { card.querySelectorAll('.choice, textarea').forEach(x => { x.disabled = false; }); notSent(go, k ? 'Retry' : 'Got it'); return; }
+      sentOK(go); poll();
+    };
+    if ($('lch')) $('lch').onclick = e => { const b = e.target.closest('.choice'); if (!b || b.disabled) return; chosen = b.dataset.v;
+      $('lch').querySelectorAll('.choice').forEach(x => x.setAttribute('aria-checked', x === b)); chk(); save(); (ans || go).focus({ preventScroll: true }); };
+    if (ans) { ans.addEventListener('input', () => { chk(); save(); }); ans.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) send(); }); }
+    go.onclick = send; chk();
+    if (painted && c.context) $('leaf').scrollTo({ top: 0, behavior: reduced.matches ? 'instant' : 'smooth' });   // the closing question points at their words: bring them back to the top
+  };
+  let checkT = 0;
+  const goTo = i => {
+    if (i < 0 || i > last || i > seen + 1) return;
+    const fresh = i > seen;
+    if (fresh) { seen = i; addStep(i, true); }
+    at = i; paint(); save();
+    const li = list.querySelector('.step.now'), wrote = stepIn(li, 0, fresh ? 480 : 320);   // a new step fades in; one gone back to arrives a little quicker
+    // The question waits until the last step has been written, then 300ms more, so the step is read before the question takes over.
+    if (fresh && seen === last) { clearTimeout(checkT); checkT = setTimeout(() => { if (!card.isConnected) return; showCheck(); tighten(true); follow(); }, Math.round(wrote * .7) + 300); }   // the fade has read by 70% of its time
+    tighten(seen > 0); follow();
+  };
+  // The page follows the lesson: the buttons under the step just revealed (or the question, at the end) come up into view,
+  // and a step gone back to comes down from under the bar. The step in play is never pushed out of sight to do it.
+  const follow = () => {
+    const el = at === last && $('check').firstChild ? $('check') : card.querySelector('.lnav'), now = list.querySelector('.step.now'); if (!el || !now) return;
+    const top = (parseFloat(document.documentElement.style.scrollPaddingTop) || 66) + 8, r = el.getBoundingClientRect(), n = now.getBoundingClientRect();
+    let dy = r.bottom > innerHeight - 28 ? r.bottom - innerHeight + 28 : 0;
+    if (n.top - dy < top) dy = n.top - top;
+    if (Math.abs(dy) > 2) scrollBy({ top: dy, behavior: reduced.matches ? 'instant' : 'smooth' });
+  };
+  $('next').onclick = () => goTo(at + 1);
+  $('back').onclick = () => goTo(at - 1);
+  $('segs').onclick = e => { const b = e.target.closest('button'); if (b && !b.disabled) goTo(+b.dataset.i); };
+  list.onclick = e => { const li = e.target.closest('.step'); if (li) goTo(+li.dataset.i); };
+  list.onkeydown = e => { const li = e.target.closest('.step'); if (li && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); goTo(+li.dataset.i); } };
+  const onKey = e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const tag = e.target.tagName; if (/TEXTAREA|INPUT|SELECT|VIDEO/.test(tag) || e.target.closest('.step')) return;
+    if ((e.key === ' ' && tag !== 'BUTTON') || e.key === 'ArrowRight') { if (at < last) { e.preventDefault(); goTo(at + 1); } }
+    else if (e.key === 'ArrowLeft' && at > 0) { e.preventDefault(); goTo(at - 1); }
+  };
+  const onTheme = () => { if (view && view.theme) { visFrom = -2; showVis(at); } };
+  document.addEventListener('keydown', onKey); document.addEventListener('roomtheme', onTheme);
+  cleanups.push(() => { document.removeEventListener('keydown', onKey); document.removeEventListener('roomtheme', onTheme); if (view && view.destroy) view.destroy(); });
+  painted = true;
+  H.where = () => `Step ${at + 1} of ${steps.length}: `;
+  H.working = () => seen > 0;
+  H.update = st => { if (st.submitted) { lock(); if ($('go')) sentOK($('go')); } };
+  paint();
+  if (seen === last) showCheck();
+  if (s.submitted) H.update(s); else if (at < last) $('next').focus({ preventScroll: true });
+}
+
+/* ---------- no card up: the contents page. Each subject is a volume; one opens into its gaps and units, and a block starts from there ---------- */
+let LAUNCH = { open: false, subject: null, unit: null, gap: null, plan: null, at: 0 };
+const CHEV = '<svg width="12" height="12" viewBox="0 0 10 10" aria-hidden="true"><path d="M3.5 1.5 7 5 3.5 8.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+// The link that opens the chat for a block started here. It is kept for a quarter of an hour, so it is still on the page after the
+// browser's "Open Claude?" prompt has been dismissed, the room has redrawn or the tab has been reloaded.
+const CHAT = { get: () => { try { const c = JSON.parse(store.get('room-chat') || 'null'); return c && Date.now() - c.at < 15 * 60000 && /^(claude|codex):/.test(c.link) ? c : null; } catch (e) { return null; } },
+               set: (link, subject) => store.set('room-chat', JSON.stringify({ link, subject, at: Date.now() })) };
+async function launcher(area, s) {
+  const waiting = s.subject && !s.ended;   // a block has begun and the tutor is getting the first card ready
+  if (waiting && !LAUNCH.open) {
+    const chat = CHAT.get();
+    area.innerHTML = `<div class="contents waitrow">${chat && chat.subject === s.subject ? `<a class="btn sm" href="${esc(chat.link)}">Open the chat</a>` : ''}<button class="btn ghost sm" id="other" type="button">Start a different block</button></div>`;
+    $('other').onclick = () => { LAUNCH.open = true; launcher(area, S); paintTail(S); };
+    return;
+  }
+  if (!$('vols')) area.innerHTML = `${s.ended ? `<div class="blockover">${CHECK} Block over</div>` : ''}<div class="contents"><div class="vols" id="vols"></div></div>`;
+  if (!LAUNCH.plan || Date.now() - LAUNCH.at > 60000) {
+    try { LAUNCH.plan = await api('../state'); LAUNCH.at = Date.now(); } catch (e) { LAUNCH.plan = LAUNCH.plan || { subjects: [] }; }
+    if (!$('vols')) return;   // a card arrived while the plan was loading
+  }
+  const P = LAUNCH.plan, today = P.today || new Date().toISOString().slice(0, 10);
+  const due = x => (x.skills || []).filter(k => k.next && k.next <= today).length;
+  const x = P.subjects.find(x => x.id === LAUNCH.subject), vols = $('vols');
+  const units = {}; if (x) (x.skills || []).forEach(k => (units[k.unit] = units[k.unit] || []).push(k));
+  const gaps = x ? (x.gaps || []).slice(0, 4) : [];
+  vols.innerHTML = P.subjects.map(v => `<button type="button" class="sub" style="--c:${esc(v.color || '#8e8e93')}" data-id="${esc(v.id)}" aria-expanded="${v.id === LAUNCH.subject}">
+      <i></i><span>${esc(v.name)}</span><small>${due(v) ? `${due(v)} due` : ''}</small>${CHEV}</button>` + (x && v.id === x.id ? `<section class="plan" style="--c:${esc(x.color || '#8e8e93')}" aria-label="${esc(x.name)}">
+      ${x.chat && x.chat.link ? `<a href="${esc(x.chat.link)}">Continue “${esc(x.chat.title || 'last chat')}”</a>` : ''}
+      ${gaps.length ? `<div class="gaps" id="gaps">${gaps.map((g, i) => `<button type="button" class="gap" data-i="${i}" aria-pressed="${String(i) === LAUNCH.gap}"><em class="${g.retest && g.retest <= today ? 'due' : ''}"></em><span>${esc(g.title)}</span></button>`).join('')}</div>` : ''}
+      ${Object.keys(units).length ? `<div class="units" id="units">${Object.entries(units).map(([u, ks]) => `<button type="button" class="unit" data-u="${esc(u)}" aria-pressed="${u === LAUNCH.unit}">
+          <b>${esc(u)}<small>${ks.filter(k => k.status === 'shown').length}/${ks.length}</small></b>
+          <span class="pips" aria-hidden="true">${ks.map(k => `<i class="${esc(k.status)} ${k.next && k.next <= today ? 'due' : ''}"></i>`).join('')}</span></button>`).join('')}</div>` : ''}
+      <div class="go-row"><textarea class="answer" id="ask" rows="1" aria-label="What to work on" placeholder="Tonight…"></textarea><button class="btn" id="start" type="button">Start 35:00</button></div>
+    </section>` : '')).join('');
+  vols.onclick = e => { const b = e.target.closest('.sub'); if (!b) return;
+    LAUNCH.subject = LAUNCH.subject === b.dataset.id ? null : b.dataset.id; LAUNCH.unit = LAUNCH.gap = null;
+    const v = P.subjects.find(v => v.id === LAUNCH.subject); setSubject(v ? v.color : S.color); launcher(area, S); };
+  if (!x) return;
+  const pick = (sel, key, slot) => e => { const b = e.target.closest(sel); if (!b) return; const v = b.dataset[key]; LAUNCH[slot] = LAUNCH[slot] === v ? null : v;
+    vols.querySelectorAll(sel).forEach(z => z.setAttribute('aria-pressed', z.dataset[key] === LAUNCH[slot])); $('ask').focus({ preventScroll: true }); };
+  if ($('units')) $('units').onclick = pick('.unit', 'u', 'unit'); if ($('gaps')) $('gaps').onclick = pick('.gap', 'i', 'gap');
+  const ask = $('ask'); const grow = () => { ask.style.height = 'auto'; ask.style.height = ask.scrollHeight + 2 + 'px'; }; ask.addEventListener('input', grow);
+  ask.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('start').click(); } });
+  $('start').onclick = async () => {
+    const btn = $('start'); btn.disabled = true;
+    const gap = LAUNCH.gap !== null ? gaps[+LAUNCH.gap] : null;
+    const title = (ask.value.trim() || (gap ? gap.title : '') || (LAUNCH.unit ? LAUNCH.unit : '') || 'Next session list').slice(0, 120);
+    const text = [ask.value.trim(), gap ? gap.text : '', LAUNCH.unit && !gap ? `Unit: ${LAUNCH.unit}. ` + units[LAUNCH.unit].map(k => k.skill).join('; ') : ''].filter(Boolean).join(' ');
+    const now = new Date(), end = new Date(now.getTime() + 35 * 60000), hm = d => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    try {
+      const r = await api('../start', { subject: x.id, room: true, label: 'room', minutes: 35, start: hm(now), end: hm(end), why: 'started from the room', work: [{ title, text, min: 35 }] });
+      if (r.error) throw new Error(r.error);
+      LAUNCH = { open: false, subject: null, unit: null, gap: null, plan: null, at: 0 };
+      CHAT.set(r.link, x.id);
+      if (RID !== x.id) { RID = x.id; history.replaceState(null, '', '/room/' + RID + location.search); lastV = -1; }   // this tab is that subject's room now
+      vols.querySelector('.plan').innerHTML = `<div class="opening"><i class="caret" aria-hidden="true"></i><a class="btn sm" href="${esc(r.link)}">Open the chat</a></div>`;
+      location.href = r.link;   // asked for in this tab, so the browser's "Open Claude?" prompt stays up until it is answered; the button is there if it was dismissed
+    } catch (e) { btn.disabled = false; notSent(btn, 'Start'); }
+  };
+  if (!LAUNCH.unit && LAUNCH.gap === null) ask.focus({ preventScroll: true });
+}
+
+poll(); setInterval(poll, 1000);
+addEventListener('pagehide', e => { if (!e.persisted) navigator.sendBeacon('/api/room/bye', JSON.stringify(RID ? { room: RID } : {})); });
+window.addEventListener('load', () => { if (S) { math($('main')); math($('source')); } });
+</script>
+</body>
+</html>

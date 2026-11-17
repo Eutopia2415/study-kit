@@ -1,0 +1,4 @@
+interface:
+  display_name: "Study Grill"
+  short_description: "Subject practice, probing questions, tracked progress"
+  default_prompt: "Use $study-grill to quiz me on my chosen subject and topic, one question at a time; let me try first, probe my reasoning, and track my progress."

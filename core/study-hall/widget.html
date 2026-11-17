@@ -1,0 +1,805 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Study HUD</title>
+<style>
+  /* Modelled on Agent HUD (measured from its screenshots, read out of its binary):
+     the pill sits on a screen edge at an offset along it, vertical on left/right and horizontal
+     on top/bottom; on drop it snaps to the nearest edge. Hovering a block opens its popover on
+     the open side. Only opacity and transform animate: easeOut 0.22s in after a 0.12s delay,
+     0.45s grace, 0.12s out; snaps, arcs and numbers glide on 0.2/0.8/0.2/1 over 0.4s. */
+  :root {
+    --panel: rgba(0, 0, 0, .9);
+    --solid: rgba(18, 18, 20, .985);   /* panels with paragraphs: text behind must not show through */
+    --edge: rgba(255, 255, 255, .16);
+    --line: rgba(255, 255, 255, .11);
+    --track: #2c2c2e;
+    --sel: rgba(255, 255, 255, .14);
+    --hover: rgba(255, 255, 255, .07);
+    --text: #fff;
+    --text-2: #a1a1a6;
+    --text-3: #6e6e73;
+    --mint: #8fe3a9;
+    --green: #34c759;
+    --yellow: #ffd60a;
+    --red: #ff453a;
+    --ease-out: cubic-bezier(0, 0, .58, 1);
+    --glide: cubic-bezier(.2, .8, .2, 1);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: transparent; overflow: hidden; height: 100%; }
+  body {
+    color: var(--text); font: 13px/1.35 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased;
+    -webkit-user-select: none; user-select: none; cursor: default;
+  }
+  .card { position: absolute; left: 0; top: 0; background: var(--panel); border: 1px solid var(--edge);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, .32); }
+
+  /* pill: one row per block tonight */
+  #pill { border-radius: 26px; padding: 8px 0; display: flex; flex-direction: column; will-change: transform;
+          transform: translate3d(var(--px, -999px), var(--py, -999px), 0) scale(var(--hud-scale, 1)); transform-origin: top left; }
+  #pill.snap { transition: transform .4s var(--glide); }
+  body.horiz #pill { flex-direction: row; padding: 0 8px; border-radius: 29px; }
+  #pill .date { height: 24px; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; font-size: 13px; font-weight: 700; color: var(--text); }
+  #pill .date .day { padding: 2px 7px; border-radius: 7px; background: var(--mint); color: #000; font-size: 12px; font-weight: 800; }
+  body.horiz #pill .date { height: auto; padding: 0 6px 0 8px; }
+  .item.free .ic { color: var(--text-3); }
+  /* Docked to the screen edge like Agent HUD: flat and borderless on the edge side, round on the inside.
+     It stays docked while dragging too: it slides along its side and hops across to the other side. */
+  body.edge-right #pill { border-radius: 26px 0 0 26px; border-right: 0; }
+  body.edge-left #pill { border-radius: 0 26px 26px 0; border-left: 0; }
+  body.edge-top #pill { border-radius: 0 0 29px 29px; border-top: 0; }
+  body.edge-bottom #pill { border-radius: 29px 29px 0 0; border-bottom: 0; }
+  .item { height: 57px; width: 108px; display: flex; align-items: center; padding: 0 14px 0 9px; cursor: pointer; }
+  body.horiz .item { width: auto; height: 56px; padding: 0 12px 0 8px; gap: 10px; }
+  body.dragging .item { cursor: grabbing; }
+  .ring { position: relative; width: 40px; height: 40px; flex: none; }
+  .ring svg { display: block; overflow: visible; }
+  .ring .track { fill: none; stroke: var(--track); stroke-width: 3; }
+  .ring .arc { fill: none; stroke-width: 3; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 50% 50%;
+               transition: stroke-dashoffset .4s var(--glide), stroke .3s ease; }
+  .ring .ic { position: absolute; inset: 0; display: grid; place-items: center; font-size: 16px; font-weight: 600; transition: opacity .3s ease; }
+  .ring .ic img { width: 20px; height: 20px; object-fit: contain; }
+  .ring .badge { position: absolute; right: -3px; bottom: -3px; width: 16px; height: 16px; border-radius: 50%;
+                 background: #1c1c1e; border: 1px solid var(--edge); display: grid; place-items: center; opacity: 0; transition: opacity .3s ease; }
+  .ring .badge img { width: 9px; height: 9px; object-fit: contain; }
+  .item.locked .ic { opacity: .6; }   /* the lock badge already says locked; dimmer made blue icons near-black */
+  .item.locked .badge, .item.paused .badge { opacity: 1; }
+  .item.done .ic { opacity: .6; }
+  .val { position: relative; flex: 1; height: 22px; min-width: 44px; overflow: hidden; text-align: right; font-size: 15px; color: var(--mint); }
+  .val span { position: absolute; right: 0; top: 1px; white-space: nowrap;
+              transition: transform .4s var(--glide), opacity .3s ease, color .3s ease; }
+  .val span.out { transform: translateY(-70%); opacity: 0; }
+  .val span.in { transform: translateY(70%); opacity: 0; }
+  .item.locked .val span { color: var(--text-3); }
+
+  /* hover level: a slim strip that slides out from under the pill beside the block, like Agent HUD's */
+  #pill { z-index: 2; }
+  .strip { z-index: 1; height: 44px; border-radius: 22px; padding: 0 18px; display: flex; align-items: center; gap: 14px;
+           white-space: nowrap; font-size: 14px;
+           opacity: 0; transform: translate(calc(var(--x, 0px) + var(--sx, 0px)), calc(var(--y, 0px) + var(--sy, 0px))); visibility: hidden; pointer-events: none;
+           will-change: opacity, transform;
+           transition: opacity .12s var(--ease-out), transform .12s var(--ease-out), visibility 0s linear .12s; }
+  .strip.on { opacity: 1; transform: translate(var(--x, 0px), var(--y, 0px)); visibility: visible; pointer-events: auto; cursor: pointer;
+              transition: opacity .22s var(--ease-out), transform .22s var(--ease-out), visibility 0s; }
+  .strip.on.moving { transition: transform .3s var(--glide), opacity .22s var(--ease-out); }
+  .strip { background: var(--solid); }
+  .strip b { font-weight: 600; }
+  .strip .t { color: var(--text-2); max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+  .strip .p { color: var(--text-2); }
+  .strip .ic { display: grid; place-items: center; margin-right: -6px; }
+  .strip .ic img { width: 15px; height: 15px; }
+  .strip .p em { font-style: normal; font-weight: 600; color: var(--mint); margin-left: 6px; }
+  @media (prefers-reduced-motion: reduce) { .strip, .strip.on { transition: none !important; } }
+
+  /* popovers */
+  .pop { width: 440px; border-radius: 20px;
+         opacity: 0; transform: translate(var(--x, 0), calc(var(--y, 0px) + var(--dy, -5px))); visibility: hidden; pointer-events: none;
+         will-change: opacity, transform;
+         transition: opacity .12s var(--ease-out), transform .12s var(--ease-out), visibility 0s linear .12s; }
+  .pop.on { opacity: 1; transform: translate(var(--x, 0), var(--y, 0)); visibility: visible; pointer-events: auto;
+            transition: opacity .22s var(--ease-out), transform .22s var(--ease-out), visibility 0s; }
+  .pop.on.moving { transition: transform .3s var(--glide), opacity .22s var(--ease-out); }
+  @media (prefers-reduced-motion: reduce) { .pop, .pop.on, #pill.snap, .ring .arc, .val span { transition: none !important; } }
+
+  .pv { padding: 16px 18px 10px; }
+  .hd { display: flex; align-items: center; gap: 8px; }
+  .hd .gl { width: 18px; display: grid; place-items: center; font-size: 15px; font-weight: 600; }
+  .hd .gl img { width: 16px; height: 16px; object-fit: contain; }
+  .hd b { font-size: 15px; font-weight: 700; }
+  .hd .r { margin-left: auto; color: var(--text-2); font-size: 12px; }
+  .subl { display: flex; justify-content: space-between; gap: 12px; color: var(--text-2); font-size: 12px; margin: 5px 0 4px 26px; }
+  .rows { margin: 6px 0 2px; }
+  .row { display: grid; grid-template-columns: 8px 1fr 28px 52px 92px; gap: 10px; align-items: center; padding: 6px 0; }
+  .row .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .row .k { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+  .row .k img { width: 13px; height: 13px; object-fit: contain; }
+  .row .bar { height: 4px; background: var(--track); border-radius: 999px; overflow: hidden; }
+  .row .bar i { display: block; height: 100%; background: var(--mint); border-radius: 999px; }
+  .row .v { text-align: right; font-weight: 600; color: var(--mint); white-space: nowrap; }
+  .row .d { text-align: right; color: var(--text-2); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sec { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 10px; }
+  .sh { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 700; margin-bottom: 4px; }
+  .sh span { font-weight: 400; color: var(--text-2); font-size: 12px; }
+  .li { display: grid; grid-template-columns: 18px 1fr auto; gap: 8px; align-items: baseline; padding: 3px 0; font-size: 12.5px; }
+  .li .gl { display: grid; place-items: center; font-weight: 600; align-self: start; padding-top: 1px; }
+  .li .gl img { width: 13px; height: 13px; object-fit: contain; }
+  .li .t { color: #e5e5ea; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .li .t.wrap { white-space: normal; }
+  .li .n { color: var(--text-2); font-size: 12px; white-space: nowrap; }
+  .more { color: var(--text-2); font-size: 12px; padding: 2px 0 0 26px; }
+  .chart { display: flex; align-items: flex-end; gap: 8px; margin: 8px 0 2px; }
+  .col { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+  .col i { height: 22px; border-radius: 5px; display: flex; align-items: center; justify-content: center; }
+  .col .x { color: var(--text-3); font-size: 10.5px; text-align: center; margin-top: 2px; }
+  .col.test .x { color: var(--red); }
+  .tabs { display: flex; gap: 2px; margin-left: auto; }
+  .tabs button { min-width: 28px; height: 24px; padding: 0 6px; border: 0; border-radius: 7px; background: transparent; color: var(--text-2); font: inherit; font-size: 13px; cursor: pointer; }
+  .tabs button[aria-pressed="true"] { background: var(--sel); color: var(--text); }
+  .tabs button:hover { background: var(--hover); }
+  .scroll { max-height: 500px; overflow-y: auto; }
+  .scroll::-webkit-scrollbar { width: 0; }
+  .foot { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); margin-top: 10px; padding-top: 8px; }
+  .foot button { border: 0; background: none; color: var(--text-2); font: inherit; font-size: 15px; cursor: pointer; padding: 3px 6px; border-radius: 7px; }
+  .foot button:hover { background: var(--hover); color: var(--text); }
+  .foot span { color: var(--text-3); font-size: 11.5px; }
+  [data-collapse] { cursor: pointer; }
+  .acts { display: flex; gap: 8px; margin-top: 12px; }
+  .acts button { flex: 1; border: 0; border-radius: 999px; padding: 8px 10px; font: inherit; font-weight: 600; cursor: pointer;
+                 background: rgba(255, 255, 255, .1); color: var(--text); }
+  .acts button.p { background: var(--text); color: #000; }
+  .acts button:hover { filter: brightness(1.1); }
+</style>
+</head>
+<body>
+<div id="pill" class="card"></div>
+<div id="peek" class="card strip"></div>
+<div id="panel" class="card pop" style="z-index:3;background:var(--solid)"></div>
+<div id="nudge" class="card pop" style="z-index:4;background:var(--solid);width:260px"></div>
+<script src="plan.js"></script>
+<script>
+const native = window.webkit?.messageHandlers?.hud;
+const send = msg => native && native.postMessage(msg);
+const GAP = 10, POP_GAP = 8, DOCK = 0;   // DOCK: the pill's distance from the screen edge (flush)
+const GLYPH = { calc: '📈', lit: '❝', law: '🏛', biz: '💼', phil: '💡', hw: '✎', sweep: '↻', test: '⚑', week: '▥', lock: '🔒', check: '✓', pause: '⏸' };
+// SF Symbols, drawn by the app in each subject's colour.
+const SYMBOL = { calc: 'chart.xyaxis.line', lit: 'quote.opening', law: 'building.columns.fill', biz: 'briefcase.fill', phil: 'lightbulb.max.fill',
+                 hw: 'list.bullet.clipboard', sweep: 'arrow.triangle.2.circlepath', test: 'flag.fill', week: 'chart.bar.fill', lock: 'lock.fill', check: 'checkmark', pause: 'pause.fill' };
+let ICONS = {};
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('hud.' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('hud.' + k, JSON.stringify(v)); } catch {} },
+};
+let open = null, peekKey = null, panelKey = null, tab = store.get('tab', 'tonight'), hovered = false;
+let place = store.get('place', { edge: 'right', at: 0.12 });   // edge + position along it (0..1), like Agent HUD's ScreenPlacement
+let pos = { x: 0, y: 0 };
+
+const iconKey = x => !x ? null : x.homework ? 'hw' : x.sweep ? 'sweep' : x.sid;
+const icon = (key, size) => ICONS[key] ? `<img src="${ICONS[key]}" alt="" style="width:${size}px;height:${size}px">`
+  : `<span style="color:${key && S.subjects.find(s => s.id === key)?.color || '#d1d1d6'};font-size:${size}px">${esc(GLYPH[key] || '·')}</span>`;
+const urgency = n => n <= 3 ? 'var(--red)' : n <= 7 ? 'var(--yellow)' : 'var(--mint)';
+const short = { weekday: 'short', month: 'short', day: 'numeric' };
+function ago(t) { const s = Math.round((Date.now() - new Date(t)) / 1000); return s < 60 ? `${s}s ago` : `${Math.round(s / 60)}m ago`; }
+
+function requestIcons() {
+  if (!native || !S) return;
+  const want = {};
+  for (const s of S.subjects) want[s.id] = [SYMBOL[s.id] || 'graduationcap.fill', s.color, 32];   // new subjects get a cap
+  for (const k of ['hw', 'sweep', 'week']) want[k] = [SYMBOL[k], '#d1d1d6', 32];
+  want.test = [SYMBOL.test, '#ff453a', 32]; want.lock = [SYMBOL.lock, '#a1a1a6', 20]; want.check = [SYMBOL.check, '#34c759', 20]; want.pause = [SYMBOL.pause, '#ffd60a', 20];
+  send({ type: 'icons', want });
+}
+window.hudIcons = map => { ICONS = map; $('pill').dataset.sig = ''; paint(); };
+
+/* ---------- tonight's blocks, one unlocked at a time ---------- */
+// The evening the pill shows: today's, or none on a day without study (the pill then says Free).
+function evening() { return P.evenings.find(e => e.day === S.today) || null; }
+
+// Each block is done (logged or its time is over), active (now), open (next up), or locked.
+function blocks(ev) {
+  const tonight = ev.day === S.today, d = new Date(), m = d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
+  const list = ev.blocks.filter(s => ev.slots[s.id]), times = tonight ? shift(list) : null;
+  let unlocked = true;
+  return list.map((orig, k) => {
+    const x = ev.slots[orig.id], len = minutesOf(orig.end) - minutesOf(orig.start) + (times ? times[k].ext : 0);
+    const a = times ? times[k].a : minutesOf(orig.start), b = times ? times[k].b : minutesOf(orig.end);
+    const slot = times ? { ...orig, start: hhmm(a), end: hhmm(b) } : orig;
+    let state;
+    if (x.logged) state = 'done';
+    else if (tonight && m >= b) state = 'done';   // time's up: nothing is logged from the HUD, so a finished block counts as done
+    else if (tonight && m >= a) state = 'active';
+    else state = unlocked ? 'open' : 'locked';
+    const r = { slot, x, state, left: b - m, progress: tonight ? Math.max(0, Math.min(1, 1 - (b - m) / len)) : 0, len,
+                paused: state === 'active' && pausedNow() };
+    if (state === 'active' || state === 'open' || state === 'locked') unlocked = false;   // later blocks wait for this one
+    return r;
+  });
+}
+
+function blockVal(bk, ev) {
+  if (bk.state === 'done') return { val: '✓', color: 'var(--green)', p: 1, arc: 'var(--green)' };
+  if (bk.state === 'missed') return { val: '–', color: 'var(--text-3)', p: 1, arc: '#48484a' };
+  if (bk.paused) return { val: tdur(bk.left), color: 'var(--yellow)', p: bk.progress, arc: 'var(--yellow)' };
+  if (bk.state === 'active') { const c = bk.left < 10 ? 'var(--yellow)' : 'var(--mint)'; return { val: tdur(bk.left), color: c, p: bk.progress, arc: c }; }
+  if (bk.state === 'open') return { val: ev.day === S.today ? clock(bk.slot.start) : fmt(ev.day, { weekday: 'short' }), color: 'var(--text)', p: 0, arc: 'var(--mint)' };
+  return { val: tdur(bk.len), color: '', p: 0, arc: 'var(--mint)' };
+}
+
+/* ---------- pill ---------- */
+const R = 18.5, C = 2 * Math.PI * R;
+// The pill has room for about five characters: 45m, 1:10.
+const tdur = min => {
+  if (min < 1) return `${Math.max(0, Math.ceil(min * 60))}s`;   // the last minute counts seconds
+  min = Math.round(min);
+  return min >= 60 ? `${Math.floor(min / 60)}:${String(min % 60).padStart(2, '0')}` : `${min}m`;
+};
+function buildPill(keys) {
+  const today = dOf(S.today);
+  const letter = rotationLetter(S.today);   // A-D on school days, nothing on weekends
+  $('pill').innerHTML = `<div class="date">${fmt(S.today, { month: 'short' })} ${today.getDate()}${letter ? `<span class="day">${letter} day</span>` : ''}</div>` + keys.map(k => `<div class="item" data-k="${k}">
+    <div class="ring"><svg width="40" height="40" aria-hidden="true"><circle class="track" cx="20" cy="20" r="${R}"/>
+      <circle class="arc" cx="20" cy="20" r="${R}" stroke-dasharray="${C}" stroke-dashoffset="${C}"/></svg>
+      <div class="ic"></div><div class="badge"></div></div>
+    <div class="val"><span></span></div></div>`).join('');
+}
+function setVal(el, text, color) {
+  const cur = el.querySelector('span:not(.out)');
+  if (cur && cur.textContent === text) { cur.style.color = color || ''; return; }
+  if (cur && cur.textContent) {   // roll the old value up and the new one in, like .numericText
+    cur.classList.add('out'); setTimeout(() => cur.remove(), 420);
+    const n = document.createElement('span'); n.className = 'in'; n.textContent = text; n.style.color = color || '';
+    el.appendChild(n); void n.offsetWidth; n.classList.remove('in');
+  } else if (cur) { cur.textContent = text; cur.style.color = color || ''; }
+}
+function paintPill() {
+  const ev = evening();
+  const bks = ev ? blocks(ev) : [], keys = ev ? bks.map(b => b.slot.id) : ['free'];
+  const sig = S.today + '|' + keys.join(',') + '|' + bks.map(b => iconKey(b.x)).join(',') + '|' + Object.keys(ICONS).length;
+  if ($('pill').dataset.sig !== sig) { buildPill(keys); $('pill').dataset.sig = sig; layout(false); }
+  if (!ev) {   // no study today: an empty ring that says Free
+    const row = $('pill').querySelector('[data-k="free"]');
+    row.className = 'item free'; setVal(row.querySelector('.val'), 'Free', 'var(--text-2)');
+    return;
+  }
+  for (const bk of bks) {
+    const row = $('pill').querySelector(`[data-k="${bk.slot.id}"]`), v = blockVal(bk, ev);
+    row.className = 'item ' + bk.state + (bk.paused ? ' paused' : '');
+    const arc = row.querySelector('.arc');
+    arc.style.strokeDashoffset = C * (1 - v.p); arc.style.stroke = v.arc;
+    const ic = icon(iconKey(bk.x), 20), icEl = row.querySelector('.ic');
+    if (icEl.dataset.k !== ic) { icEl.innerHTML = ic; icEl.dataset.k = ic; }
+    const badge = row.querySelector('.badge'), b = bk.state === 'locked' ? icon('lock', 9) : bk.paused ? icon('pause', 9) : '';
+    if (badge.dataset.k !== b) { badge.innerHTML = b; badge.dataset.k = b; }
+    setVal(row.querySelector('.val'), v.val, v.color);
+  }
+}
+
+/* ---------- placement on a screen edge ---------- */
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+let hudScale = 1;
+function pillSize() {
+  return {width: $('pill').offsetWidth * hudScale, height: $('pill').offsetHeight * hudScale};
+}
+window.hudSetSize = value => {
+  const n = Number(value);
+  const percent = Number.isFinite(n) ? clamp(n, 75, 150) : 100;
+  hudScale = percent / 100;
+  store.set('size', percent);
+  document.documentElement.style.setProperty('--hud-scale', hudScale);
+  if (open) show(null);
+  layout(false);
+};
+addEventListener('storage', e => {
+  if (e.key === 'hud.size') hudSetSize(store.get('size', 100));
+});
+function posFor(edge, at) {
+  const W = innerWidth, H = innerHeight, w = pillSize().width, h = pillSize().height;
+  if (edge === 'right') return { x: W - DOCK - w, y: clamp(at * (H - h), GAP, H - h - GAP) };
+  if (edge === 'left') return { x: DOCK, y: clamp(at * (H - h), GAP, H - h - GAP) };
+  if (edge === 'top') return { x: clamp(at * (W - w), GAP, W - w - GAP), y: DOCK };
+  return { x: clamp(at * (W - w), GAP, W - w - GAP), y: H - h - DOCK };
+}
+function setPos(p, animate) {
+  pos = p;
+  $('pill').classList.toggle('snap', !!animate);
+  $('pill').style.setProperty('--px', p.x + 'px'); $('pill').style.setProperty('--py', p.y + 'px');
+  report();
+}
+function setEdgeClass(edge) {
+  for (const e of ['left', 'right', 'top', 'bottom']) document.body.classList.toggle('edge-' + e, e === edge);
+  document.body.classList.toggle('horiz', edge === 'top' || edge === 'bottom');
+}
+function layout(animate) {
+  setEdgeClass(place.edge);
+  setPos(posFor(place.edge, place.at), animate);
+}
+window.hudPlace = (edge, at) => { place = { edge, at }; store.set('place', place); show(null); layout(true); };
+
+// Native drag: the app reports how far the pointer has moved since the press; on release we snap
+// to the nearest edge.
+let dragFrom = null;
+window.hudDragStart = () => {
+  dragFrom = { ...pos };
+  clearTimeout(openTimer); clearTimeout(closeTimer);   // a hover that began before the drag must not reopen anything
+  if (open) show(null);
+  hideNudge();
+  document.body.classList.add('dragging');
+};
+// The native host moves the live pill; it remains visible during edge changes.
+window.hudDragHidePill = () => {}; // Legacy bridge: never hide the live pill.
+// Mid-drag change of shape (side <-> top/bottom): redraw the pill for the new edge at the docked spot
+// under the pointer (px, py, page coordinates; frac = where along its length it was grabbed), show it
+// and return its rectangle.
+window.hudDragOrient = (edge, px, py, frac) => {
+  setEdgeClass(edge);
+  const W = innerWidth, H = innerHeight, w = pillSize().width, h = pillSize().height;
+  const x = edge === 'left' ? 0 : edge === 'right' ? W - w : clamp(px - frac * w, GAP, W - w - GAP);
+  const y = edge === 'top' ? 0 : edge === 'bottom' ? H - h : clamp(py - frac * h, GAP, H - h - GAP);
+  setPos({ x, y }, false);
+  $('pill').style.opacity = '';
+  return [x, y, w, h];
+};
+window.hudDropAt = (x, y) => { setPos({ x, y }, false); $('pill').style.opacity = ''; hudDrop(); };
+window.hudDragBy = (dx, dy) => { if (!dragFrom) hudDragStart(); setPos({ x: dragFrom.x + dx, y: dragFrom.y + dy }, false); };
+window.hudDragTo = (x, y) => {
+  if (open) show(null);
+  document.body.classList.add('dragging');
+  setPos({ x, y }, false);
+};
+window.hudDrop = () => {
+  dragFrom = null;
+  document.body.classList.remove('dragging');
+  const w0 = pillSize().width, h0 = pillSize().height, W = innerWidth, H = innerHeight;
+  const cx = pos.x + w0 / 2, cy = pos.y + h0 / 2;
+  const d = { left: cx, right: W - cx, top: cy, bottom: H - cy };
+  const edge = Object.keys(d).sort((a, b) => d[a] - d[b])[0];
+  setEdgeClass(edge);
+  const w = pillSize().width, h = pillSize().height;   // size in the new orientation
+  const at = edge === 'left' || edge === 'right' ? clamp((cy - h / 2) / Math.max(1, H - h), 0, 1) : clamp((cx - w / 2) / Math.max(1, W - w), 0, 1);
+  place = { edge, at }; store.set('place', place);
+  setPos(posFor(edge, at), !native);
+};
+addEventListener('resize', () => layout(false));
+
+/* ---------- popovers ---------- */
+// Bullet-length version of a STATE.md task: first clause, no asides, about eight words.
+function brief(text, words = 8) { return shorten(text, words); }   // see plan.js: never ends unfinished
+const bullet = (color, t, n) => `<div class="li"><span class="gl" style="color:${color}">•</span><span class="t">${esc(t)}</span><span class="n">${esc(n)}</span></div>`;
+
+function row(dot, k, bar, v, d, vColor, barColor) {
+  return `<div class="row"><span class="dot" style="background:${dot}"></span><span class="k">${k}</span>
+    <span class="bar">${bar == null ? '' : `<i style="width:${Math.max(0, Math.min(1, bar)) * 100}%;${barColor ? `background:${barColor}` : ''}"></i>`}</span>
+    <span class="v" style="${vColor ? `color:${vColor}` : ''}">${v}</span><span class="d">${d}</span></div>`;
+}
+const li = (key, t, n, wrap) => `<div class="li"><span class="gl">${icon(key, 13)}</span><span class="t${wrap ? ' wrap' : ''}">${esc(t)}</span><span class="n">${esc(n)}</span></div>`;
+const head = (iconHTML, title, right) => `<div class="hd"><span class="gl">${iconHTML}</span><b>${esc(title)}</b><span class="r">${right || ''}</span></div>`;
+const foot = () => `<div class="foot"><button data-page title="Open the full page in your browser">↗</button>
+  <span>synced ${ago(S.read_at)}</span><span><button data-open title="The whole plan: tonight, week, tests, grades">▤</button><button data-collapse title="Close">✕</button></span></div>`;
+const more = (list, n) => list.length > n ? `<div class="more">${list.length - n} more</div>` : '';
+
+
+// Hover level: one line. Subject, topic, then label/value pairs.
+function stripBlock(id) {
+  const ev = evening(), bks = ev ? blocks(ev) : [], i = bks.findIndex(b => b.slot.id === id), bk = bks[i];
+  if (!bk) return '';
+  const x = bk.x, prev = bks[i - 1];
+  const pair = (k, v, c) => `<span class="p">${esc(k)}<em${c ? ` style="color:${c}"` : ''}>${esc(v)}</em></span>`;
+  const topic = x.homework ? `${x.homework.length} due tonight` : x.sweep ? x.sweep.map(w => w.s.short).join(' · ') : x.logged ? brief(x.logged.what || '', 5) : brief(topicOf(x), 5);
+  const parts = [`<span class="ic">${icon(iconKey(x), 15)}</span><b>${esc(slotName(x))}</b>`];
+  if (topic) parts.push(`<span class="t">${esc(topic)}</span>`);
+  if (bk.paused) parts.push(pair('Paused', tdur(bk.left) + ' left', 'var(--yellow)'));
+  else if (bk.state === 'active') parts.push(pair('Left', tdur(bk.left), bk.left < 10 ? 'var(--yellow)' : ''), pair('Ends', clock(bk.slot.end), 'var(--text)'));
+  else if (bk.state === 'open') parts.push(pair('Starts', (ev.day === S.today ? '' : fmt(ev.day, { weekday: 'short' }) + ' ') + clock(bk.slot.start), 'var(--text)'), pair('Length', tdur(bk.len), 'var(--text)'));
+  else if (bk.state === 'locked') parts.push(pair('Unlocks after', prev ? prev.slot.label : 'previous', 'var(--text-2)'), pair('Length', tdur(bk.len), 'var(--text-2)'));
+  else if (bk.state === 'done') parts.push(pair('Done', '✓', 'var(--green)'));
+  else parts.push(pair('Missed', '–', 'var(--text-3)'));
+  const test = x.sid && P.tests.find(t => t.subject === x.sid && upcoming(t));
+  if (test) { const n = days(S.today, test.date); parts.push(pair(testWord(test), n === 0 ? 'today' : `${n}d`, urgency(n))); }
+  return parts.join('');
+}
+
+// Each block gets a fresh chat in the subject's folder. Starting one writes the block's plan to
+// TONIGHT.md first, and the chat's first message tells it to read that and STATE.md.
+const chatOf = x => x?.sid ? S.subjects.find(s => s.id === x.sid)?.folder : null;
+// Done logs the block's row in SCHEDULE.md from the HUD's own timer, so the block counts even when
+// the chat didn't write it. Two clicks: the first shows the minutes it will log. Shown while the block
+// runs and after its time is up until something is logged; the server keeps one row per block.
+let confirmDone = null;
+const usedMinutes = bk => Math.max(0, Math.round(bk.state === 'active' ? bk.len - Math.max(0, bk.left) : bk.len));
+function doneButton(bk) {
+  const x = bk.x;
+  if (!x?.sid || x.sweep || x.homework || x.logged || !(bk.state === 'active' || bk.state === 'done')) return '';
+  const min = usedMinutes(bk), arm = confirmDone === bk.slot.id;
+  return `<div class="acts" style="margin-top:6px"><button class="${arm ? 'p' : ''}" data-done="${esc(bk.slot.id)}" title="Log this block in SCHEDULE.md with the time studied so far">${arm ? `Log ${min}m as done?` : 'Done'}</button>${arm ? '<button data-done-cancel>Keep going</button>' : ''}</div>`;
+}
+const chatButton = (x, primary, bk) => chatOf(x)
+  ? `<button class="${primary ? 'p' : ''}" data-start="${esc(bk.slot.id)}" title="New chat in ${esc(chatOf(x))}, started on this block's plan">Start ${esc(subjName(x.sid))} chat</button>` : '';
+function startBody(bk) {
+  const x = bk.x, ev = evening(), work = x.homework ? x.homework.map(h => ({ title: h.title, text: `Homework${h.due ? ', due ' + fmt(h.due, { weekday: 'short', month: 'short', day: 'numeric' }) : ''}`, min: 0 }))
+    : (x.work || []).map(t => ({ title: taskTitle(t), text: t.text, min: t.min }));
+  // The planner sizes work for a 70-minute block; fit it to this block's real length.
+  const total = work.reduce((a, t) => a + t.min, 0);
+  if (total) work.forEach(t => { t.min = Math.max(5, Math.round(t.min * bk.len / total / 5) * 5); });
+  const t = x.test;
+  return { day: ev.day, label: bk.slot.label, start: bk.slot.start, end: bk.slot.end, minutes: bk.len, subject: x.sid,
+           why: x.why || '', test: t ? `${t.label}, ${fmt(t.date, { weekday: 'short', month: 'short', day: 'numeric' })}` : '', work };
+}
+const startBlock = (bk, openIt) => api('/api/start', startBody(bk)).then(r => {
+  if (!openIt) return;
+  native ? send({ type: 'open', url: r.link }) : window.open(r.link);
+  if (S.room && !(S.pad || []).includes(startBody(bk).subject)) api('/api/room/show', { room: startBody(bk).subject });   // each subject has its own room
+});
+
+// The popup when a block starts: what it is, and a jump to that subject's chat.
+function nudgeView(bk) {
+  const x = bk.x;
+  // One short phrase: stop at the first comma when what comes before it already says enough.
+  const what = x.work?.[0] ? taskTitle(x.work[0]) : x.sweep ? 'Quick review questions' : '';
+  return `<div class="pv" style="padding:14px 16px 12px">${head(icon(iconKey(x), 16), `${slotName(x)} · now`, `till ${clock(bk.slot.end)}`)}
+    ${what ? `<div class="subl" style="margin-top:4px">${esc(what)}</div>` : ''}
+    <div class="acts">${chatOf(x) ? `<button class="p" data-start="${esc(bk.slot.id)}">Start chat</button>` : ''}<button data-nudge-close>Later</button></div></div>`;
+}
+
+function peekBlock(id) {
+  const ev = evening(), bks = ev ? blocks(ev) : [], i = bks.findIndex(b => b.slot.id === id), bk = bks[i];
+  if (!bk) return '<div class="pv">Nothing planned</div>';
+  const x = bk.x, prev = bks[i - 1];
+  const test = P.tests.find(upcoming), tn = test ? days(S.today, test.date) : null;
+  const status = { done: 'done', missed: 'time is up', active: 'now', open: ev.day === S.today ? 'up next' : inDays(days(S.today, ev.day)),
+                   locked: `unlocks after ${prev ? prev.slot.label : 'the block before'}` }[bk.state];
+  const tasks = x.homework ? x.homework.map(h => bullet(subjColor(h.subject), brief(h.title, 6), subjName(h.subject)))
+    : x.sweep ? x.sweep.flatMap(w => [w.gap, w.review].filter(Boolean).map(g => bullet(w.s.color, g.terms ? brief(g.title, 6) : `${g.review ? 'Review' : 'Cold Q'}: ${brief(g.title, 5)}`, w.s.short)))
+    : x.logged ? [bullet('var(--green)', brief(x.logged.what || 'Logged'), '')]
+    : (x.work || []).map(t => bullet(slotColor(x), taskTitle(t), `${t.min}m`));
+  const timeRow = bk.paused ? row('var(--yellow)', 'Paused', bk.progress, dur(bk.left), 'on hold', 'var(--yellow)', 'var(--yellow)')
+    : bk.state === 'active' ? row('var(--green)', 'Time left', bk.progress, dur(bk.left), `ends ${clock(bk.slot.end)}`, bk.left < 10 ? 'var(--yellow)' : '')
+    : bk.state === 'done' ? row('var(--green)', 'Done', 1, '✓', x.logged ? 'logged' : 'time is up', 'var(--green)')
+    : bk.state === 'locked' ? row('var(--text-3)', 'Locked', null, dur(bk.len), `after ${prev?.slot.label || ''}`, 'var(--text-3)')
+    : row('var(--text-3)', 'Starts', null, clock(bk.slot.start), status, 'var(--text)');
+  return `<div class="pv">${head(icon(iconKey(x), 16), slotName(x), ev.day === S.today ? 'Tonight' : fmt(ev.day, short))}
+    <div class="subl"><span>${esc(bk.slot.label)} · ${clock(bk.slot.start)}–${clock(bk.slot.end)}</span><span>${esc(status)}</span></div>
+    ${bk.state === 'active' || (chatOf(x) && bk.state === 'open') ? `<div class="acts" style="margin-top:8px">
+      ${bk.state === 'active' ? `<button data-pause="${bk.paused ? 'resume' : 'pause'}">${bk.paused ? 'Resume' : 'Pause'}</button>
+        <button data-restart="${bk.slot.id}" title="Start this block over with its full ${dur(bk.len)}">Restart</button>
+        <button data-adj="shorten" aria-label="5 minutes less" title="5 minutes less; later blocks come back earlier">−5</button>
+        <button data-adj="extend" aria-label="5 minutes more" title="5 minutes more; later blocks move back">+5</button>` : ''}${chatButton(x, true, bk)}</div>` : ''}
+    ${doneButton(bk)}
+    <div class="rows">${timeRow}
+      ${test ? row(subjColor(test.subject), `${icon('test', 12)} Next ${testWord(test).toLowerCase()}`, 1 - Math.min(tn, 14) / 14, tn === 0 ? 'today' : `${tn}d`, `${esc(subjName(test.subject))} · ${fmt(test.date, { weekday: 'short' })}`, urgency(tn), urgency(tn)) : ''}
+    </div>
+    ${tasks.length ? `<div class="sec"><div class="sh">${bk.state === 'active' ? 'Do now' : bk.state === 'done' ? 'Done' : 'Plan'}<span>${esc(slotName(x))}</span></div>
+      ${tasks.slice(0, 4).join('')}${more(tasks, 4)}</div>` : ''}
+    ${hwList(x.sid)}
+    ${foot()}</div>`;
+}
+function hwList(sid) {
+  const hw = sid ? homeworkOf(sid) : [];
+  if (!hw.length) return '';
+  const due = h => !h.due ? '' : h.due.slice(0, 10) < S.today ? 'late' : h.due.slice(0, 10) === S.today ? 'today' : fmt(h.due, { weekday: 'short' });
+  return `<div class="sec"><div class="sh">Homework<span>${esc(subjName(sid))}</span></div>${hw.slice(0, 3).map(h => bullet(subjColor(sid), brief(h.title, 7), due(h))).join('')}${more(hw, 3)}</div>`;
+}
+
+function peekTest() {
+  const tests = P.tests.filter(upcoming), first = tests[0];
+  const prep = P.evenings.flatMap(e => deepIds(e.blocks).map(id => e.slots[id]).filter(x => x?.test).map(x => ({ e, x })));
+  return `<div class="pv">${head(icon('test', 16), 'Tests', `${tests.length} coming`)}
+    <div class="subl"><span>${first ? `Next: ${esc(subjName(first.subject))} ${esc(first.label)}` : 'Nothing scheduled'}</span><span>from Classroom</span></div>
+    <div class="rows">${tests.map(t => { const n = days(S.today, t.date);
+      return row(subjColor(t.subject), `${icon(t.subject, 13)} ${esc(subjName(t.subject))} · ${esc(t.label)}`, 1 - Math.min(n, 14) / 14, n === 0 ? 'today' : `${n}d`, fmt(t.date, short), urgency(n), urgency(n)); }).join('')}</div>
+    ${prep.length ? `<div class="sec"><div class="sh">Prep blocks<span>planned for you</span></div>
+      ${prep.slice(0, 5).map(({ e, x }) => li(x.sid, `${fmt(e.day, short)} · ${slotName(x)}`, x.test.label)).join('')}${more(prep, 5)}</div>` : ''}
+    ${foot()}</div>`;
+}
+function chartHTML() {
+  const evs = P.evenings.filter(e => e.day !== S.today).slice(0, 8);
+  const cell = x => `<i style="background:${x ? `color-mix(in srgb, ${slotColor(x)} 22%, transparent)` : 'var(--track)'};${x?.test ? 'box-shadow:inset 0 0 0 1.5px rgba(255,69,58,.95)' : ''}">${x ? icon(iconKey(x), 14) : ''}</i>`;
+  return `<div class="chart">${evs.map(e => `<div class="col${e.testsToday.length ? ' test' : ''}" title="${esc(fmt(e.day, short))}">${deepIds(e.blocks).map(id => cell(e.slots[id])).join('')}
+    <div class="x">${fmt(e.day, { weekday: 'narrow' })}${dOf(e.day).getDate()}</div></div>`).join('')}</div>`;
+}
+function weekStats() {
+  const wk = weekStart(S.today), planned = {}, done = {};
+  P.evenings.filter(e => e.wk === wk).forEach(e => deepIds(e.blocks).forEach(id => { const x = e.slots[id]; if (x?.sid && !x.logged) planned[x.sid] = (planned[x.sid] || 0) + 1; }));
+  S.log.filter(r => r.date >= wk && isBlock(r)).forEach(r => { done[r.subject] = (done[r.subject] || 0) + 1; });
+  return { wk, planned, done, target: S.subjects.reduce((a, s) => a + s.weekly, 0), got: S.subjects.reduce((a, s) => a + Math.min(s.weekly, done[s.id] || 0), 0) };
+}
+function peekWeek() {
+  const w = weekStats();
+  return `<div class="pv">${head(icon('week', 16), 'This week', `${w.got} of ${w.target} blocks`)}
+    <div class="subl"><span>Week of ${fmt(w.wk, { month: 'short', day: 'numeric' })}</span><span>${S.grades.as_of ? `PowerSchool ${fmt(S.grades.as_of, { month: 'short', day: 'numeric' })}` : ''}</span></div>
+    <div class="rows">${S.subjects.map(s => {
+      const g = S.grades.courses?.[s.id], b = (w.done[s.id] || 0) + (w.planned[s.id] || 0);
+      return row(s.color, `${icon(s.id, 13)} ${esc(s.short)}`, b / Math.max(1, s.weekly), esc(g?.letter || '–'), `${b} of ${s.weekly} blocks`, gradeColor(g?.letter));
+    }).join('')}</div>
+    <div class="sec"><div class="sh">Next evenings<span>first block on top · red edge = test prep</span></div>${chartHTML()}</div>
+    ${foot()}</div>`;
+}
+
+/* ---------- full panel (click) ---------- */
+const TABS = [['tonight', '◷', 'Tonight'], ['week', '▥', 'Next evenings'], ['tests', '⚑', 'Tests'], ['grades', 'A', 'Grades']];
+function fullView() {
+  const body = { tonight: tonightTab, week: weekTab, tests: testsTab, grades: gradesTab }[tab]();
+  return `<div class="pv">
+    <div class="hd"><b data-collapse title="Close">${esc(TABS.find(t => t[0] === tab)[2])}</b>
+      <div class="tabs">${TABS.map(([k, g, l]) => `<button data-tab="${k}" aria-pressed="${tab === k}" title="${l}">${g}</button>`).join('')}</div></div>
+    <div class="subl" style="margin-left:0"><span>${fmt(S.today)}</span><span>${S.grades.as_of ? 'Grades ' + fmt(S.grades.as_of, { month: 'short', day: 'numeric' }) : ''}</span></div>
+    <div class="scroll">${body}</div>
+    <div class="foot"><button data-page title="Open the full page in your browser">↗</button><span>synced ${ago(S.read_at)}</span><button data-collapse title="Close">✕</button></div></div>`;
+}
+function tonightTab() {
+  const ev = evening();
+  if (!ev) { const nx = P.evenings.find(e => e.day > S.today);
+    return `<div class="sec" style="border:0;margin-top:2px;padding-top:4px"><div class="sh">Free today<span>no study blocks</span></div>
+      ${nx ? `<div class="li"><span class="gl"></span><span class="t">Next: ${fmt(nx.day, short)} · ${deepIds(nx.blocks).map(id => nx.slots[id]).filter(Boolean).map(x => esc(slotName(x))).join(', ')}</span><span class="n">${inDays(days(S.today, nx.day))}</span></div>` : ''}</div>`; }
+  const bks = blocks(ev);
+  const rows = bks.map(bk => { const v = blockVal(bk, ev);
+    return row(v.arc, `${icon(iconKey(bk.x), 13)} ${esc(slotName(bk.x))}`, v.p, v.val, `${bk.slot.label} · ${clock(bk.slot.start)}`, v.color || 'var(--text-3)'); }).join('');
+  const cur = bks.find(b => b.state === 'active' || b.state === 'open');
+  const x = cur?.x;
+  const tasks = !x ? [] : x.homework ? x.homework.map(h => bullet(subjColor(h.subject), brief(h.title, 6), subjName(h.subject)))
+    : x.sweep ? x.sweep.flatMap(w => [w.gap, w.review].filter(Boolean).map(g => bullet(w.s.color, g.terms ? brief(g.title, 6) : `${g.review ? 'Review' : 'Cold Q'}: ${brief(g.title, 5)}`, w.s.short)))
+    : (x.work || []).map(t => bullet(slotColor(x), taskTitle(t), `${t.min}m`));
+  return `<div class="sec" style="border:0;margin-top:2px;padding-top:4px"><div class="sh">${ev.day === S.today ? 'Tonight' : fmt(ev.day, short)}<span>one block at a time</span></div></div>
+    <div class="rows">${rows}</div>${tasks.length ? `<div class="sec"><div class="sh">${cur.state === 'active' ? 'Do now' : 'Up next'}<span>${esc(slotName(x))}</span></div>${tasks.join('')}
+</div>` : ''}`;
+}
+function weekTab() {
+  const evs = P.evenings.filter(e => e.day !== S.today).slice(0, 8);
+  return `<div class="sec" style="border:0;margin-top:2px"><div class="sh">Blocks<span>first block on top · red edge = test prep</span></div>${chartHTML()}</div>
+    <div class="sec">${evs.map(e => `<div class="li"><span class="gl">${e.testsToday.length ? icon('test', 12) : ''}</span>
+      <span class="t">${fmt(e.day, short)} · ${deepIds(e.blocks).map(id => e.slots[id]).filter(Boolean).map(x => esc(slotName(x))).join(', ')}</span>
+      <span class="n">${e.testsToday.length ? `<span style="color:var(--red)">${esc(e.testsToday.map(t => subjName(t.subject)).join(', '))} test</span>` : inDays(days(S.today, e.day))}</span></div>`).join('')}</div>`;
+}
+const innerOf = html => html.replace(/^<div class="pv">/, '').replace(/<div class="foot">[\s\S]*$/, '');
+function testsTab() {
+  return innerOf(peekTest()).replace(/<div class="hd">[\s\S]*?<\/div>\s*<div class="subl">[\s\S]*?<\/div>/, '');
+}
+function gradesTab() {
+  return innerOf(peekWeek()).replace(/<div class="hd">[\s\S]*?<\/div>/, '').replace(/<div class="sec"><div class="sh">Next evenings[\s\S]*$/, '');
+}
+
+/* ---------- glue ---------- */
+function setHTML(el, html) {
+  if (el.dataset.html === html) return;
+  const sc = el.querySelector('.scroll')?.scrollTop || 0;
+  el.innerHTML = html; el.dataset.html = html;
+  const s2 = el.querySelector('.scroll'); if (s2) s2.scrollTop = sc;
+}
+// Report actual painted positions during transitions, not just their destinations.
+// The native host crops its window to these rectangles while keeping this viewport fixed.
+let geometryFrame = 0, geometryUntil = 0, lastGeometry = '';
+function emitGeometry() {
+  const rect = el => { const r = el.getBoundingClientRect(); return [r.x, r.y, r.width, r.height]; };
+  const els = ['peek', 'panel', 'nudge'].map($).filter(el =>
+    el.classList.contains('on') || parseFloat(getComputedStyle(el).opacity) > 0.001);
+  const geometry = { type: 'geometry', card: rect($('pill')), popovers: els.map(rect) };
+  const key = JSON.stringify(geometry);
+  if (key !== lastGeometry) { lastGeometry = key; send(geometry); }
+}
+function report() {
+  if (!native) return;
+  geometryUntil = performance.now() + 500;
+  emitGeometry();
+  if (geometryFrame) return;
+  const tick = () => {
+    emitGeometry();
+    if (performance.now() < geometryUntil) geometryFrame = requestAnimationFrame(tick);
+    else geometryFrame = 0;
+  };
+  geometryFrame = requestAnimationFrame(tick);
+}
+// WebKit throttles animation frames while the window is covered (the drag snapshot sits on top of it),
+// so the frames above can stop before a glide ends. The end of a glide reports itself.
+addEventListener('transitionend', e => { if (native && (e.target.id === 'pill' || e.target.classList?.contains('pop') || e.target.classList?.contains('strip'))) emitGeometry(); });
+
+// The strip starts under the pill's edge (so it looks attached) and slides outward from it.
+const TUCK = 16;
+function placeStrip(el, item) {
+  const W = innerWidth, H = innerHeight, w = el.offsetWidth, h = el.offsetHeight, pw = pillSize().width, ph = pillSize().height;
+  const cx = pos.x + (item.offsetLeft + item.offsetWidth / 2) * hudScale, cy = pos.y + (item.offsetTop + item.offsetHeight / 2) * hudScale;
+  let x, y, sx = 0, sy = 0;
+  if (place.edge === 'right') { x = pos.x + TUCK - w; y = cy - h / 2; sx = 10; el.style.paddingRight = (18 + TUCK) + 'px'; el.style.paddingLeft = ''; }
+  else if (place.edge === 'left') { x = pos.x + pw - TUCK; y = cy - h / 2; sx = -10; el.style.paddingLeft = (18 + TUCK) + 'px'; el.style.paddingRight = ''; }
+  else if (place.edge === 'top') { x = cx - w / 2; y = pos.y + ph + 6; sy = -8; el.style.paddingLeft = el.style.paddingRight = ''; }
+  else { x = cx - w / 2; y = pos.y - 6 - h; sy = 8; el.style.paddingLeft = el.style.paddingRight = ''; }
+  x = clamp(x, GAP, W - w - GAP); y = clamp(y, GAP, H - h - GAP);
+  el._x = x; el._y = y;
+  el.style.setProperty('--x', x + 'px'); el.style.setProperty('--y', y + 'px');
+  el.style.setProperty('--sx', sx + 'px'); el.style.setProperty('--sy', sy + 'px');
+}
+
+// Popovers open on the side away from the edge; a block's popover is centred on that block.
+function placePop(el, item) {
+  const W = innerWidth, H = innerHeight, w = el.offsetWidth, h = el.offsetHeight, pw = pillSize().width, ph = pillSize().height;
+  const cx = item ? pos.x + (item.offsetLeft + item.offsetWidth / 2) * hudScale : pos.x + pw / 2;
+  const cy = item ? pos.y + (item.offsetTop + item.offsetHeight / 2) * hudScale : pos.y + ph / 2;
+  let x, y, dy = -5;
+  if (place.edge === 'right') { x = pos.x - POP_GAP - w; y = cy - h / 2; }
+  else if (place.edge === 'left') { x = pos.x + pw + POP_GAP; y = cy - h / 2; }
+  else if (place.edge === 'top') { y = pos.y + ph + POP_GAP; x = cx - w / 2; }
+  else { y = pos.y - POP_GAP - h; x = cx - w / 2; dy = 5; }
+  x = clamp(x, GAP, W - w - GAP); y = clamp(y, GAP, H - h - GAP);
+  el._x = x; el._y = y;
+  el.style.setProperty('--x', x + 'px'); el.style.setProperty('--y', y + 'px'); el.style.setProperty('--dy', dy + 'px');
+}
+
+function show(which, key) {
+  P = plan();
+  if (which === 'peek') {
+    const moving = open === 'peek' && key !== peekKey;
+    peekKey = key; setHTML($('peek'), stripBlock(key));
+    placeStrip($('peek'), $('pill').querySelector(`[data-k="${key}"]`));
+    $('peek').classList.toggle('moving', moving);
+  }
+  if (which === 'panel') {   // a block's own panel, or the shared plan when key is null
+    panelKey = key ?? null;
+    $('panel').dataset.html = ''; setHTML($('panel'), panelKey ? peekBlock(panelKey) : fullView());
+    placePop($('panel'), panelKey ? $('pill').querySelector(`[data-k="${panelKey}"]`) : null);
+  }
+  for (const id of ['peek', 'panel']) {
+    const el = $(id), on = id === which;
+    if (on && !el.classList.contains('on')) {   // appear in place; don't slide over from where it last was
+      el.style.transition = 'none'; void el.offsetWidth; el.style.transition = '';
+    }
+    el.classList.toggle('on', on);
+  }
+  open = which;
+  report();
+}
+
+let nudgeTimer = null;
+function showNudge(bk) {
+  const el = $('nudge');
+  setHTML(el, nudgeView(bk));
+  placePop(el, $('pill').querySelector(`[data-k="${bk.slot.id}"]`));
+  el.style.transition = 'none'; void el.offsetWidth; el.style.transition = '';
+  el.classList.add('on'); report();
+  clearTimeout(nudgeTimer); nudgeTimer = setTimeout(hideNudge, 3 * 60e3);
+}
+function hideNudge() { $('nudge').classList.remove('on'); report(); }
+function maybeNudge() {
+  const ev = evening(); if (!ev || ev.day !== S.today) return;
+  const bk = blocks(ev).find(b => b.state === 'active' && b.x?.sid);
+  if (!bk) return;
+  const key = `${ev.day}|${bk.slot.id}`, seen = store.get('nudged', []);
+  if (seen.includes(key)) return;
+  store.set('nudged', [...seen.slice(-20), key]);
+  startBlock(bk, false).catch(() => {});   // TONIGHT.md is current even if the chat is opened some other way
+  showNudge(bk);
+}
+
+function paint() {
+  if (!S) return;
+  P = plan();
+  paintPill();
+  maybeNudge();
+  if (open === 'peek') { setHTML($('peek'), stripBlock(peekKey)); placeStrip($('peek'), $('pill').querySelector(`[data-k="${peekKey}"]`)); }
+  if (open === 'panel' && !hovered) { setHTML($('panel'), panelKey ? peekBlock(panelKey) : fullView()); placePop($('panel'), panelKey ? $('pill').querySelector(`[data-k="${panelKey}"]`) : null); }
+  report();
+  reportBlock();
+}
+
+// Tell the server which block is running and how long it has left, so a tutor chat can pace the
+// class against the HUD's clock (GET /api/block). Sent when it changes, and once a minute anyway
+// (a paused block's minutes left don't change, and the server treats a silent HUD as closed).
+let lastBlock = '', lastSent = 0;
+function reportBlock() {
+  const ev = evening(), bk = ev && blocks(ev).find(k => k.state === 'active');
+  const now = bk ? { subject: bk.x.sid ? subjName(bk.x.sid) : bk.slot.label, start: bk.slot.start, end: bk.slot.end,
+                     left: Math.max(0, Math.round(bk.left)), paused: bk.paused } : { subject: null };
+  const next = ev && blocks(ev).find(k => k.state === 'open' || k.state === 'locked');
+  if (next) now.next = { subject: next.x.sid ? subjName(next.x.sid) : next.slot.label, start: next.slot.start };
+  const key = JSON.stringify(now);
+  if (key !== lastBlock || Date.now() - lastSent > 60e3) {
+    lastBlock = key; lastSent = Date.now(); api('/api/block', now).catch(() => { lastBlock = ''; });
+  }
+}
+
+// Agent HUD's hover rhythm: open 0.12s after resting on a block, follow the pointer between blocks,
+// close 0.45s after it leaves the pill and popover.
+let openTimer = null, closeTimer = null;
+window.hudHover = on => {
+  hovered = on;
+  if (on) clearTimeout(closeTimer);
+  else { clearTimeout(openTimer); if (open && !pinned()) closeTimer = setTimeout(() => !hovered && !pinned() && show(null), 450); }
+};
+// The whole plan (▤) is bigger and opens away from where it was clicked, so leaving it doesn't close it;
+// a click outside the HUD, ✕ or Esc does.
+const pinned = () => open === 'panel' && panelKey == null;
+window.hudOutside = () => { if (open) show(null); };
+window.hudPointer = (x, y) => {
+  if (document.body.classList.contains('dragging') || open === 'panel') return;
+  const el = document.elementFromPoint(x, y)?.closest('.item');
+  if (!el) return;
+  const k = el.dataset.k;
+  if (k === 'free') return;
+  if (open === 'peek') { if (k !== peekKey) show('peek', k); return; }
+  clearTimeout(openTimer);
+  openTimer = setTimeout(() => hovered && open !== 'panel' && !document.body.classList.contains('dragging') && show('peek', k), 120);
+};
+
+// In a plain browser tab (no app around it), the page does hover and dragging itself.
+if (!native) {
+  let inside = false, down = null, moved = false;
+  document.addEventListener('mousemove', e => {
+    if (down) {
+      if (!moved && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 3) return;
+      moved = true; hudDragTo(e.clientX - down.gx, e.clientY - down.gy); return;
+    }
+    const hit = !!e.target.closest('#pill, .pop.on');
+    if (hit !== inside) { inside = hit; hudHover(hit); }
+    if (hit) hudPointer(e.clientX, e.clientY);
+  });
+  document.addEventListener('mousedown', e => { if (!e.target.closest('#pill, .pop.on')) hudOutside(); });
+  document.addEventListener('mousedown', e => { if (e.button === 0 && e.target.closest('#pill')) { down = { x: e.clientX, y: e.clientY, gx: e.clientX - pos.x, gy: e.clientY - pos.y }; moved = false; } });
+  document.addEventListener('mouseup', () => { if (down && moved) { hudDrop(); suppressClick = true; } down = null; });
+}
+let suppressClick = false;
+
+document.addEventListener('click', e => {
+  if (suppressClick) { suppressClick = false; return; }
+  const b = e.target.closest('button');
+  if (b?.dataset.tab) { tab = b.dataset.tab; store.set('tab', tab); $('panel').dataset.html = ''; setHTML($('panel'), fullView()); placePop($('panel'), null); report(); return; }
+  if (b?.dataset.start) { const ev = evening(), bk = ev && blocks(ev).find(k => k.slot.id === b.dataset.start);
+    if (bk) startBlock(bk, true).catch(() => {});
+    hideNudge(); show(null); return; }
+  if (b?.hasAttribute('data-nudge-close')) { hideNudge(); return; }
+  if (b?.hasAttribute('data-done-cancel')) { confirmDone = null; setHTML($('panel'), peekBlock(panelKey)); return; }
+  if (b?.dataset.done) {   // first click arms it with the minutes, the second logs the row
+    const bk = blocks(evening()).find(k => k.slot.id === b.dataset.done);
+    if (!bk) return;
+    if (confirmDone !== bk.slot.id) { confirmDone = bk.slot.id; setHTML($('panel'), peekBlock(panelKey)); return; }
+    confirmDone = null;
+    const tasks = (bk.x.work || []).map(t => t.text).filter(Boolean);
+    api('/api/done', { subject: bk.x.sid, slot: 'deep', minutes: usedMinutes(bk), tasks: tasks.length ? tasks : ['Study block'] })
+      .then(r => { S = r; P = plan(); paintPill(); setHTML($('panel'), peekBlock(panelKey)); report(); }).catch(() => {});
+    return;
+  }
+  if (b?.dataset.restart) {   // the full block again from now; later blocks move back with it
+    const bk = blocks(evening()).find(k => k.slot.id === b.dataset.restart);
+    api('/api/pause', { action: 'restart', from: minutesOf(bk.slot.start), used: bk.len - bk.left }).then(r => { S = r; P = plan(); paintPill(); setHTML($('panel'), peekBlock(panelKey)); report(); });
+    return;
+  }
+  if (b?.dataset.adj) {   // five minutes more or less on the running block; later blocks follow
+    api('/api/pause', { action: b.dataset.adj, min: 5 }).then(() => api('/api/state'))
+      .then(r => { S = r; P = plan(); paintPill(); setHTML($('panel'), peekBlock(panelKey)); report(); }).catch(() => {});
+    return;
+  }
+  if (b?.dataset.pause) {   // later blocks tonight move back by the time you were paused
+    api('/api/pause', { action: b.dataset.pause }).then(r => { S = r; P = plan(); paintPill(); setHTML($('panel'), peekBlock(panelKey)); report(); });
+    return;
+  }
+  if (e.target.closest('#nudge')) return;
+  if (b?.hasAttribute('data-page')) { const url = location.origin + '/'; native ? send({ type: 'open', url }) : window.open(url); return; }
+  if (e.target.closest('[data-collapse]')) { show(null); return; }
+  if (b?.hasAttribute('data-open')) { show('panel', null); return; }   // the shared plan with tabs
+  const item = e.target.closest('.item'), key = item ? item.dataset.k : e.target.closest('#peek') ? peekKey : null;
+  if (key === 'free') { open === 'panel' ? show(null) : show('panel', null); return; }   // the whole plan: what's coming
+  if (key) {
+    if (open === 'panel' && panelKey === key) { show(null); return; }
+    show('panel', key);   // each block opens its own panel
+  }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') show(null); });
+
+let iconSig = '';
+async function load() {
+  try { S = await api('/api/state'); }
+  catch { return; }
+  const sig = S.subjects.map(s => s.id + s.color).join();   // new subject or new colour: redraw icons
+  if (sig !== iconSig) { iconSig = sig; requestIcons(); }
+  paint();
+}
+hudSetSize(store.get('size', 100));
+load();
+// Saving anything on the settings page bumps the server's version; pick it up within 2 seconds.
+setInterval(async () => {
+  try { const { v } = await api('/api/version'); if (S && v !== S.version) load(); } catch {}
+}, 2000);
+setInterval(load, 60e3);   // and a full refresh now and then (homework due, the date rolling over)
+setInterval(() => S && paint(), 5e3);   // countdowns; an open popover under the pointer is left alone
+</script>
+</body>
+</html>

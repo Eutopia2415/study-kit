@@ -1,0 +1,4 @@
+interface:
+  display_name: "AP Literature Practice"
+  short_description: "Interactive AP Lit drills with diagnostic tutoring"
+  default_prompt: "Use $ap-lit-practice to create an interactive practice set on an unfamiliar poem, publish the student page to the practices GitHub Pages site, update its README and the mock catalog, and open the live page in Chrome. Keep difficulty ratings and the answer bank private."

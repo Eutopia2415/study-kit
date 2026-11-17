@@ -1,0 +1,60 @@
+{
+  "config": {
+    "port": 4417,
+    "room": true
+  },
+  "subjects": [
+    {
+      "id": "calc",
+      "name": "AP Calc",
+      "short": "Calc",
+      "tab": "Calc",
+      "color": "#0a84ff",
+      "weekly": 2,
+      "meets": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "apcCourse": "AP Calculus",
+      "style": "deep",
+      "slug": "ap-calc",
+      "namespace": "ap_calc"
+    },
+    {
+      "id": "lit",
+      "name": "AP Lit",
+      "short": "Lit",
+      "tab": "Lit",
+      "color": "#bf5af2",
+      "weekly": 2,
+      "meets": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "apcCourse": "AP English Literature",
+      "style": "write",
+      "slug": "ap-lit",
+      "namespace": "ap_lit"
+    },
+    {
+      "id": "biz",
+      "name": "AP Business",
+      "short": "Business",
+      "tab": "Biz",
+      "color": "#ff9f0a",
+      "weekly": 1,
+      "meets": [
+        "A",
+        "B",
+        "C"
+      ],
+      "style": "short",
+      "slug": "ap-business",
+      "namespace": "ap_business"
+    }
+  ]
+}

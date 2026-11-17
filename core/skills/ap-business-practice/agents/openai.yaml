@@ -1,0 +1,4 @@
+interface:
+  display_name: "AP Business Practice"
+  short_description: "Case-based business drills and diagnostic tutoring"
+  default_prompt: "Use $ap-business-practice to create an original untimed case-based AP Business practice set from my course materials, publish the student page to the practices GitHub Pages site, update its README and the mock catalog, and open the live page in Chrome. Keep the answer bank private."
