@@ -29,7 +29,7 @@ Read MY-RULES files as the learner's own decisions: follow them even where TEACH
 - Hold the plan. If the learner wants to detour, say what STATE.md has as next and why in one line, then follow their decision.
 
 ## Closing a block
-1. Update STATE.md: move gaps on graded evidence, rewrite "Next session", update the date. Only an unaided correct answer in a new context moves a gap to "Shown independently". Keep it under about 60 lines, not counting "What works for me", which is edited, never dropped.
+1. Update STATE.md: move gaps on graded evidence, rewrite "Next session", update the date. Only an unaided correct answer in a new context moves a gap to "Shown independently". Keep it under about 60 lines and 1,500 words, not counting "What works for me", which is edited, never dropped. It is the plan, not the diary: each gap says where it stands now, the exact miss still open and its retest date; the story of earlier attempts, class-recording notes and old scores go to `STATE-history/` (append, never read at startup).
 2. Every open gap ends with its next retest date as `Retest MM-DD.`: 1 to 2 days after a miss or a helped answer, 3 to 4 days after the first unaided correct answer, 10 to 14 days after the second. One date per gap; replace the old one. Study Hall drills gaps in order of this date.
 3. SKILLS.md: update the rows you touched (Status, Last, Next, Note). unseen or seen → tested the first time it's asked. Shown only after unaided correct answers on 3 separate days in changed contexts, never by hand. Next = the retest date while tested; once shown, 14 days later, then 30, then the month before the exam. Never delete a row; add one if class reaches a skill that isn't listed.
 4. Append one row to the Log table in `{{STUDY}}/SCHEDULE.md`: date, subject, slot, minutes actually studied, what moved. Skip it if a row for today and this subject is already there (Study Hall's Done button may have written one).
@@ -56,11 +56,3 @@ Tutoring happens in the Study Room at http://127.0.0.1:4417/room, not in chat te
 
 ## Class recordings (optional)
 If the learner drops an audio recording of class and `{{KIT}}/tools/transcribe_recording.py` runs on this Mac (it needs `pip install mlx-whisper`; transcription is local, nothing is uploaded), run `python3 {{KIT}}/tools/transcribe_recording.py "<audio>" <slug> --out "<this folder>/recordings" --date <class date>` in the background and keep tutoring. Then write `NOTES.md` in that folder (what class covered in order, the teacher's explanations worth keeping, anything due), mark the SKILLS.md rows class covered as seen, and reply in three lines or fewer. If the script can't run, say so in one line and carry on.
-
-## Running in Codex
-This folder's AGENTS.md means you are in Codex. TEACHING.md, ROOM.md and the course files were written with Claude's tools in mind; where they name one, do this instead:
-- **Shell access to Study Hall.** `room.py` and `curl localhost:4417` need the network. This folder's `.codex/config.toml` turns it on, and makes `{{STUDY}}` writable, once the learner trusts the folder. If a call is blocked by the sandbox anyway, ask for approval to run it, and tell the learner in one line to trust this folder in Codex so it stops asking.
-- **Waiting for an answer.** `room.py ask` and `room.py wait` block until the learner hands the card in. Run them with `--timeout 300` and a shell timeout above that (330000 ms); on "No answer yet", run `room.py wait` again. Stay in the same turn while a card is up, so the learner never waits on you.
-- **Skills.** The kit's skills are in `~/.agents/skills/<name>/SKILL.md`. "Load a skill" means read that file and follow it.
-- **Session titles, Claude Docs, Artifacts, ArtifactComments, ToolSearch, task lists** don't exist here. Skip renaming the chat. Writing the learner keeps revising (ROOM.md, "Shared docs") goes in `drafts/<task>.md` in this folder: they write it, you never edit their words, and your comments go in room cards that quote the line they are about.
-- **Learning records.** Use the Graphiti tools if this Codex has the `graphiti` MCP server; otherwise `records.md`, exactly as RECORDS.md says.

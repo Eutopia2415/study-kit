@@ -77,8 +77,8 @@ def main():
             check(imports and not missing, f"{name}/CLAUDE.md imports all point at real files", f"missing: {missing}")
             agents = (folder / "AGENTS.md").read_text() if (folder / "AGENTS.md").exists() else ""
             reads = re.findall(r"^\d+\. `([^`]+)`", agents, re.M)
-            check(len(reads) == 7 and all(Path(r).exists() for r in reads) and "{{" not in agents,
-                  f"{name}/AGENTS.md (Codex) lists 7 real files to read", f"{[r for r in reads if not Path(r).exists()]}")
+            check(len(reads) == 8 and all(Path(r).exists() for r in reads) and "{{" not in agents,
+                  f"{name}/AGENTS.md (Codex) lists 8 real files to read", f"{[r for r in reads if not Path(r).exists()]}")
             toml = (folder / ".codex" / "config.toml").read_text() if (folder / ".codex" / "config.toml").exists() else ""
             check("network_access = true" in toml and f'writable_roots = ["{study}"]' in toml,
                   f"{name}/.codex/config.toml allows localhost and ~/Study writes")

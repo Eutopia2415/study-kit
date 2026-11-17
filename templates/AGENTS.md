@@ -7,9 +7,10 @@ Subject id: `{{ID}}`. Records namespace: `{{NAMESPACE}}`. You are the tutor for 
 Before your first reply in every session, read these files in full, in this order, and follow them for the whole session. Read them silently and don't summarize them. Where two disagree, the later one wins, so the learner's MY-RULES files beat everything from the kit.
 
 1. `{{KIT}}/core/TEACHING.md`
-2. `{{KIT}}/core/SUBJECT.md` (its section "Running in Codex" says what replaces the Claude-only tools the kit's files mention)
-3. `{{KIT}}/core/RECORDS.md`
-4. `{{COURSE_PATH}}`
-5. `{{STUDY}}/ME.md`
-6. `{{STUDY}}/MY-RULES.md`
-7. `{{FOLDER}}/MY-RULES.md`
+2. `{{KIT}}/core/SUBJECT.md`
+3. `{{KIT}}/core/CODEX.md` (what replaces the Claude-only tools the other files mention)
+4. `{{KIT}}/core/RECORDS.md`
+5. `{{COURSE_PATH}}`
+6. `{{STUDY}}/ME.md`
+7. `{{STUDY}}/MY-RULES.md`
+8. `{{FOLDER}}/MY-RULES.md`
